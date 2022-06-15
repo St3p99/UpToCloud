@@ -3,6 +3,7 @@ import 'dart:html';
 
 import 'package:admin/models/authentication_data.dart';
 import 'package:admin/models/document.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
 import '../managers/rest_manager.dart';
@@ -146,6 +147,18 @@ Future<User?> searchUserByEmail(String email) async {
     }
   }
 
+  Future<User?> searchUserByEmailContains(String email) async {
+    try {
+      Response response = await _restManager.makeGetRequest(
+          ADDRESS_STORE_SERVER, REQUEST_SEARCH_USER_BY_EMAIL_CONTAINS + "/" + email);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      return User.fromJson(jsonDecode(response.body));
+    } catch (e) {
+      print("searchUserByEmail exception: " + e.toString());
+      return null;
+    }
+  }
+
   Future<StreamedResponse?> uploadFiles(List<FileDataModel> files) async{
     late StreamedResponse response;
     try {
@@ -169,6 +182,22 @@ Future<User?> searchUserByEmail(String email) async {
     }
     return response;
   }
+
+  Future<Response?> addReaders(List<Document> document, List<User> user) async{
+    try {
+      Map<String, dynamic> params = Map();
+      params["files_id"] = document.map((d) => d.id.toString());
+      params["readers_id"] = user.map((u) => u.id);
+      Response response = await _restManager.makePutRequest(
+        ADDRESS_STORE_SERVER, REQUEST_ADD_READERS, params);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      return response;
+    } catch (e) {
+      print("addReaders exception: " + e.toString());
+      return null;
+    }
+  }
+
 
 }
 

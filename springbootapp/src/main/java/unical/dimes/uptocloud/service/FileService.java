@@ -308,26 +308,28 @@ public class FileService {
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public void addReaders(String ownerID, List<String> readersID, Long docID) throws UnauthorizedUserException, ResourceNotFoundException{
+    public void addReaders(String ownerID, List<String> readersID, List<Long> docsID) throws UnauthorizedUserException, ResourceNotFoundException{
         User owner;
         List<User> readers = new LinkedList<>();
-        Document d;
+        List<Document> documents = new LinkedList<>();
 
         try {
             owner = userService.getById(ownerID);
             for (String readerID: readersID) {
                 readers.add(userService.getById(readerID));
             }
-            d = documentService.getById(docID);
+            for (Long docID: docsID) {
+                Document d = documentService.getById(docID);
+                if(!d.getOwner().equals(owner)) throw new UnauthorizedUserException();
+                d.addReaders(readers);
+                documents.add(d);
+            }
+
         }catch (ResourceNotFoundException e){
             logger.warning(e.toString());
             throw e;
         }
-
-        if(!d.getOwner().equals(owner)) throw new UnauthorizedUserException();
-
-        d.addReaders(readers);
-        documentRepository.save(d);
+        documentRepository.saveAll(documents);
     }
 
     @Transactional(propagation = Propagation.REQUIRED)

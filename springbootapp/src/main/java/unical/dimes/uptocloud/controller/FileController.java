@@ -142,7 +142,7 @@ public class FileController {
         }
     }
 
-    @Operation(method = "downlaodFile", summary = "Download the specified file")
+    @Operation(method = "downloadFile", summary = "Download the specified file")
     @PreAuthorize("hasAuthority('user')")
     @GetMapping(value = "/download/", produces = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<?> downloadFile(@AuthenticationPrincipal Jwt principal, @RequestParam("file_id") Long docID) {
@@ -185,7 +185,7 @@ public class FileController {
     @Operation(method = "addReaders", summary = "Add readers to the specified file")
     @PreAuthorize("hasAuthority('user')")
     @PutMapping(value = "/add-readers")
-    public ResponseEntity<?> addReaders(@AuthenticationPrincipal Jwt principal, @RequestParam("file_id") Long docID, @RequestParam("readers_id") List<String> readersID) {
+    public ResponseEntity<?> addReaders(@AuthenticationPrincipal Jwt principal, @RequestParam("files_id") List<Long> docID, @RequestParam("readers_id") List<String> readersID) {
         try {
             fileService.addReaders(principal.getSubject(), readersID, docID);
             return ResponseEntity.status(200).build();

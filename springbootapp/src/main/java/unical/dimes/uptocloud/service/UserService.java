@@ -40,4 +40,9 @@ public class UserService {
     public User createUser(User user) {
         return userRepository.save(user);
     }
+
+    public Object getByEmailContains(String email) throws ResourceNotFoundException {
+        return userRepository.findByEmailStartingWith(email.toLowerCase()).
+                orElseThrow(ResourceNotFoundException::new);
+    }
 }

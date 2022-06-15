@@ -30,9 +30,11 @@ const int DEFAULT_PAGE_SIZE = 10;
 const String REQUEST_ADD_USER = "api/users/new";
 const String REQUEST_LOAD_USER = "/api/users";
 const String REQUEST_SEARCH_USER_BY_EMAIL = "/api/users/byEmail";
+const String REQUEST_SEARCH_USER_BY_EMAIL_CONTAINS = "/api/users/byEmail-contains";
 const String REQUEST_NEW_USER = "/api/users/new";
 
 // FILE CONTROLLER
+const String REQUEST_ADD_READERS = "/api/files/add-readers";
 const String REQUEST_UPLOAD_FILES = "api/files/upload-multiple";
 const String REQUEST_UPLOAD_FILE = "api/files/upload";
 

@@ -52,6 +52,7 @@ public class Document {
             name = "reading_permissions",
             joinColumns = { @JoinColumn(name = "document_id") },
             inverseJoinColumns = { @JoinColumn(name = "reader_id") },
+
             schema = "public"
     )
     private List<User> readers;
@@ -60,11 +61,14 @@ public class Document {
     private DocumentMetadata metadata;
 
     public void addReader(User reader){
-        this.readers.add(reader);
+        if(!this.readers.contains(reader))
+            this.readers.add(reader);
     }
 
     public void addReaders(List<User> readers){
-        this.readers.addAll(readers);
+        for (User reader: readers) {
+            if(!this.readers.contains(reader)) this.readers.add(reader);
+        }
     }
 
     public void removeReader(User reader){

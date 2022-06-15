@@ -65,12 +65,12 @@ public class AccountingService {
 
     @Transactional
     public User registerUser(User user, String pwd) throws UniqueKeyViolationException, ConnectException {
-        if (userRepository.existsByEmail(user.getEmail())) {
+        if (userRepository.existsByEmail(user.getEmail().toLowerCase())) {
             throw new UniqueKeyViolationException();
         }
         String userId = registerUserOnKeycloak(user, pwd);
         user.setId(userId);
-
+        user.setEmail(user.getEmail().toLowerCase());
         return userService.createUser(user);
     }
 

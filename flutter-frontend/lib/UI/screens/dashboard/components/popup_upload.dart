@@ -10,12 +10,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:http/http.dart';
 
 import '../../../../models/document.dart';
 import '../../../../models/file_data_model.dart';
 import '../../../../models/user.dart';
 import '../../../behaviors/app_localizations.dart';
 import '../../../constants.dart';
+import 'error_dialog.dart';
 
 class PopupUpload extends StatefulWidget {
   PopupUpload({
@@ -107,7 +109,7 @@ class _PopupUploadState extends State<PopupUpload> {
                   ),
                 ),
                 onPressed: () {
-                  new ApiController().uploadFile(file!);
+                  _upload();
                 },
                 child: Text("Confirm"),
               ),
@@ -117,5 +119,22 @@ class _PopupUploadState extends State<PopupUpload> {
       ),
     );
   }
+
+  Future<void> _upload() async {
+    StreamedResponse? response = await new ApiController().uploadFile(file!);
+    switch (response!.statusCode) {
+      case 200:{
+        Navigator.pop(context);
+      }break;
+      default:{
+        showDialog(
+            context: context,
+            builder: (context) => ErrorDialog(title:"UNKNOWN ERROR", message:"")
+        );
+      }
+        break;
+    }
+  }
+
 
 }

@@ -11,6 +11,7 @@ import '../../../support/constants.dart';
 import '../../../support/login_result.dart';
 import '../../behaviors/app_localizations.dart';
 import '../../responsive.dart';
+import '../dashboard/components/error_dialog.dart';
 import '../main/main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -157,28 +158,6 @@ class _LoginScreenState extends State<LoginScreen> {
     ))));
   }
 
-  _showErrorDialog(String title, String message) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(title),
-            content: Text(message),
-            actions: <Widget>[
-              TextButton(
-                child: Text(
-                  AppLocalizations.of(context)!.translate("close")!.capitalize,
-                  style: TextStyle(color: Colors.black87),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              )
-            ],
-          );
-        });
-  }
-
   _validateEmail(String value) {
     if(DEBUG_MODE) return null;
     if (value.isEmpty) {
@@ -239,12 +218,18 @@ class _LoginScreenState extends State<LoginScreen> {
           break;
         case LoginResult.error_wrong_credentials:
           {
-            _showErrorDialog("WRONG CREDENTIALS", "message..");
+            showDialog(
+                context: context,
+                builder: (context) => ErrorDialog(title:"UNKNOWN ERROR", message:"")
+            );
           }
           break;
         default:
           {
-            _showErrorDialog("UNKNOWN ERROR", "messagge..");
+            showDialog(
+                context: context,
+                builder: (context) => ErrorDialog(title:"UNKNOWN ERROR", message:"")
+            );
           }
           break;
       }

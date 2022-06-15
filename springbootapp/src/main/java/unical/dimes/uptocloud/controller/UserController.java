@@ -76,6 +76,17 @@ public class UserController {
         }
     }
 
+    @Operation(method = "getUserByEmailContains", summary = "Retrieve user if email contains specified string")
+    @GetMapping(value = "/byEmail-contains/{email}")
+    @PreAuthorize("hasAuthority('user')")
+    public ResponseEntity getUserByEmailContains(@PathVariable String email) {
+        try {
+            return ResponseEntity.ok(userService.getByEmailContains(email));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");
+        }
+    }
+
 
     /**
      * DELETE OPERATION

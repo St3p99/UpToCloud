@@ -7,11 +7,13 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:http/http.dart';
 
 import '../../../../models/document.dart';
 import '../../../../models/user.dart';
 import '../../../behaviors/app_localizations.dart';
 import '../../../constants.dart';
+import 'error_dialog.dart';
 
 class PopupShare extends StatefulWidget {
   PopupShare({
@@ -69,7 +71,22 @@ class _PopupShareState extends State<PopupShare> {
     _typeAheadController.dispose();
   }
 
-  void _pushData() {}
+  void _pushData() async{
+    Response? response = await new ApiController().addReaders(widget.files, _selectedUsers);
+    switch (response!.statusCode) {
+      case 200:{
+        Navigator.pop(context);
+      }break;
+      default:{
+        return showDialog(
+            context: context,
+            builder: (context) => ErrorDialog(title:"UNKNOWN ERROR", message:"")
+        );
+
+      }
+      break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +164,7 @@ class _PopupShareState extends State<PopupShare> {
                     ),
                   ),
                   suggestionsCallback: (pattern) async {
-                    return await _getSuggestions(pattern);
+                    return _getSuggestions(pattern);
                   },
                   suggestionsBoxDecoration: SuggestionsBoxDecoration(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -193,27 +210,13 @@ class _PopupShareState extends State<PopupShare> {
                 ),
                 // Padding(
                 //     padding: EdgeInsets.symmetric(vertical: defaultPadding)),
+                //TODO: Add list of current readers
               ]),
             ),
           )),
         ),
         actions: [
-          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-            // ButtonTheme(
-            //   minWidth: 25.0,
-            //   height: 25.0,
-            //   child: ElevatedButton(
-            //     style: TextButton.styleFrom(
-            //       padding: EdgeInsets.symmetric(
-            //         horizontal: defaultPadding * 1.5,
-            //         vertical:
-            //         defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
-            //       ),
-            //     ),
-            //     onPressed: () {},
-            //     child: Text("Close"),
-            //   ),
-            // ),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             ButtonTheme(
               minWidth: 25.0,
               height: 25.0,
@@ -225,7 +228,26 @@ class _PopupShareState extends State<PopupShare> {
                     defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text("Close"),
+              ),
+            ),
+            ButtonTheme(
+              minWidth: 25.0,
+              height: 25.0,
+              child: ElevatedButton(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: defaultPadding * 1.5,
+                    vertical:
+                    defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
+                  ),
+                ),
+                onPressed: () {
+                  _pushData();
+                },
                 child: Text("Confirm"),
               ),
             ),
@@ -246,12 +268,11 @@ class _PopupShareState extends State<PopupShare> {
 
   Future<User?> _getUser(String email) async {
     User fakeUser =
-        new User(id: "100", username: email.split("@").first, email: email);
+        new User(id: "", username: "", email: email);
     if (_suggestions.contains(fakeUser))
       return Future.value(_suggestions.lookup(fakeUser));
     else
-      return fakeUser;
-    // await ApiController.sharedInstance!.searchUserByEmail(email);
+      return await new ApiController().searchUserByEmailContains(email);
   }
 
   HashSet<User> _getSuggestions(String pattern) {
