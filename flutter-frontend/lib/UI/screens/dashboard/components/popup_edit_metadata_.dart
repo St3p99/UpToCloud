@@ -1,0 +1,326 @@
+import 'dart:convert';
+
+import 'package:admin/UI/responsive.dart';
+import 'package:flutter/material.dart';
+import '../../../../models/document.dart';
+import '../../../constants.dart';
+
+class PopupEditMetadata extends StatefulWidget {
+  PopupEditMetadata({
+    Key? key,
+    required this.file,
+  }) : super(key: key);
+
+  Document file;
+
+  @override
+  _PopupEditMetadataState createState() => _PopupEditMetadataState();
+}
+
+class _PopupEditMetadataState extends State<PopupEditMetadata> {
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _tagsEditingController = TextEditingController();
+
+  String get _inputTags => _tagsEditingController.text.trim();
+
+  late String _description;
+  late List<String> _tags = List.empty(growable: true);
+  late List<String> _suggestions = ["test1", "non", "ho", "fantasia"];
+  late FocusNode _focusNode;
+
+  refreshState(VoidCallback fn) {
+    if (mounted) setState(fn);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _tagsEditingController.addListener(() => refreshState(() {}));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _focusNode.dispose();
+    _tagsEditingController.dispose();
+  }
+
+  void _pushData() {}
+
+  @override
+  Widget build(BuildContext context) {
+    return Theme(
+      data: Theme.of(context),
+      child: AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        backgroundColor: secondaryColor,
+        scrollable: true,
+        contentPadding: EdgeInsets.all(defaultPadding * 2),
+        actionsPadding: EdgeInsets.all(defaultPadding * 2),
+        content: Container(
+          width: Responsive.metadataDialogWidth(context),
+          height: Responsive.metadataDialogHeight(context),
+          child: SingleChildScrollView(
+            child: Center(
+              child: Column(
+                children: [
+                  Form(
+                    key: _formKey,
+                    child: Column(children: [
+                      Text(
+                        "\"" + widget.file.name + "\" | Edit Metadata",
+                        style: Theme.of(context).textTheme.headline6,
+                      ),
+                      Padding(
+                          padding:
+                              EdgeInsets.symmetric(vertical: defaultPadding)),
+                      TextFormField(
+                        keyboardType: TextInputType.multiline,
+                        minLines: 1,
+                        maxLines: 3,
+                        maxLength: 250,
+                        initialValue: widget.file.metadata.description,
+                        decoration: InputDecoration(
+                          hintText: "Lorem ipsum...",
+                          label: Text("Description"),
+                          fillColor: secondaryColor,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(10)),
+                          ),
+                        ),
+                        onSaved: (value) => _description = value!,
+                        onFieldSubmitted: (value) {
+                          _pushData();
+                        },
+                      ),
+                    ]),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: defaultPadding),
+                  ),
+                  _tagsWidget()
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+            // ButtonTheme(
+            //   minWidth: 25.0,
+            //   height: 25.0,
+            //   child: ElevatedButton(
+            //     style: TextButton.styleFrom(
+            //       padding: EdgeInsets.symmetric(
+            //         horizontal: defaultPadding * 1.5,
+            //         vertical:
+            //             defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
+            //       ),
+            //     ),
+            //     onPressed: () {},
+            //     child: Text("Close"),
+            //   ),
+            // ),
+            ButtonTheme(
+              minWidth: 25.0,
+              height: 25.0,
+              child: ElevatedButton(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: defaultPadding * 1.5,
+                    vertical:
+                        defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
+                  ),
+                ),
+                onPressed: () {},
+                child: Text("Save"),
+              ),
+            ),
+          ])
+        ],
+      ),
+    );
+  }
+
+  Widget _tagsWidget() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_tags.length > 0) ...[
+          Wrap(
+            alignment: WrapAlignment.start,
+            children: _tags
+                .map((tag) => tagChip(
+                      tag: tag,
+                      onTap: () => _removeTag(tag),
+                      action: 'remove',
+                    ))
+                .toSet()
+                .toList(),
+          ),
+          Padding(
+            padding: EdgeInsets.only(bottom: defaultPadding / 2),
+          ),
+        ] else
+          SizedBox(),
+        _tagsTextField(),
+        Padding(
+          padding: EdgeInsets.only(bottom: defaultPadding / 2),
+        ),
+        _displaySuggestions(),
+      ],
+    );
+  }
+
+  Widget _tagsTextField() {
+    return Container(
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              focusNode: _focusNode,
+              controller: _tagsEditingController,
+              decoration: InputDecoration(
+                hintText: "Add Tags",
+                label: Text("Tags"),
+                fillColor: secondaryColor,
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                ),
+              ),
+              // onChanged: (value) => _inputTags = value!,
+              onSubmitted: (value) {
+                _addTag(value);
+                _tagsEditingController.clear();
+                _focusNode.requestFocus();
+              },
+              textInputAction: TextInputAction.search,
+            ),
+          ),
+          if (_inputTags.isNotEmpty) ...[
+            Padding(padding: EdgeInsets.only(right: defaultPadding)),
+            InkWell(
+              child: Icon(
+                Icons.clear,
+                color: Colors.grey.shade700,
+              ),
+              onTap: () => _tagsEditingController.clear(),
+            )
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget tagChip({tag, onTap, action}) {
+    return InkWell(
+        onTap: onTap,
+        child: Stack(
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(
+                vertical: 5.0,
+                horizontal: 5.0,
+              ),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 10.0,
+                  vertical: 10.0,
+                ),
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(100.0),
+                ),
+                child: Text(
+                  tag,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: Theme.of(context).textTheme.bodyText1!.fontSize,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              child: CircleAvatar(
+                backgroundColor: primaryColor,
+                radius: 8.0,
+                child: Icon(
+                  action == 'add' ? Icons.add : Icons.clear,
+                  size: 10.0,
+                  color: Colors.white,
+                ),
+              ),
+            )
+          ],
+        ));
+  }
+
+  _addTag(String tag) async {
+    if (!_tags.contains(tag))
+      setState(() {
+        _tags.add(tag);
+      });
+  }
+
+  _removeTag(String tag) async {
+    if (_tags.contains(tag)) {
+      setState(() {
+        _tags.remove(tag);
+      });
+    }
+  }
+
+  _displaySuggestions() {
+    return _suggestions.isNotEmpty
+        ? _buildSuggestionWidget()
+        : Text('No Labels added');
+  }
+
+  List<String> _filterSearchResultList() {
+    if (_inputTags.isEmpty) return _suggestions;
+
+    List<String> _tempList = [];
+    for (int index = 0; index < _suggestions.length; index++) {
+      String tag = _suggestions[index];
+      if (tag.toLowerCase().trim().contains(_inputTags.toLowerCase())) {
+        _tempList.add(tag);
+      }
+    }
+
+    return _tempList;
+  }
+
+  Widget _buildSuggestionWidget() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (_filterSearchResultList().length > 0) ...[
+        Text(
+          'Suggestions',
+          style: Theme.of(context).textTheme.labelSmall,
+        ),
+        Padding(
+          padding: EdgeInsets.only(bottom: defaultPadding / 2),
+        ),
+        Wrap(
+          alignment: WrapAlignment.start,
+          children: _filterSearchResultList()
+              .where((tag) => !_tags.contains(tag))
+              .map((tag) => tagChip(
+                    tag: tag,
+                    onTap: () => _addTag(tag),
+                    action: 'add',
+                  ))
+              .toList(),
+        ),
+      ]
+    ]);
+  }
+}

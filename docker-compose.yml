@@ -1,0 +1,77 @@
+version: "3.8"
+services:
+  azurite:
+    container_name: azurite
+    image: mcr.microsoft.com/azure-storage/azurite
+    hostname: azurite
+    restart: on-failure
+    command: "azurite --blobHost 0.0.0.0 --blobPort 10000 --queueHost 0.0.0.0 --queuePort 10001"
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+    networks:
+    - uptocloudnw
+
+  keycloak:
+    container_name: keycloak
+    hostname: keycloak
+    command:
+      - " -b 0.0.0.0"
+    image: jboss/keycloak:${KEYCLOAK_VERSION}
+    restart: on-failure
+    # command: "docker run -e KEYCLOAK_USER=$KEYCLOAK_USER -e KEYCLOAK_PASSWORD=$KEYCLOAK_USER -e KEYCLOAK_IMPORT=./imports/keycloak/uptocloud-realm.json"
+    env_file: ./.env
+    volumes: 
+      - ./imports/keycloak/realm-export.json:/keycloak/realm-export.json
+    environment:
+      KEYCLOAK_USER: $KEYCLOAK_USER
+      KEYCLOAK_PASSWORD: $KEYCLOAK_PASSWORD
+      KEYCLOAK_DATABASE_USER: $KEYCLOAK_DATABASE_USER
+      KEYCLOAK_DATABASE_PASSWORD: $KEYCLOAK_DATABASE_PASSWORD
+      KEYCLOAK_DATABASE_NAME: $KEYCLOAK_DATABASE_NAME
+      KEYCLOAK_IMPORT: /keycloak/realm-export.json
+    ports:
+      - $KEYCLOAK_LOCAL_PORT:$KEYCLOAK_DOCKER_PORT
+    depends_on:
+      - postgresdb
+    networks:
+    - uptocloudnw
+
+  postgresdb:
+    container_name: db
+    hostname: db
+    image: postgres
+    restart: on-failure
+    env_file: ./.env
+    environment:
+      POSTGRES_DB: $DB_DATABASE
+      POSTGRES_USER: $DB_USER
+      POSTGRES_PASSWORD: $DB_ROOT_PASSWORD
+    ports:
+      - $DB_LOCAL_PORT:$DB_DOCKER_PORT
+    volumes:
+    - ./imports/db/uptoclouddb.sql:/docker-entrypoint-initdb.d/uptoclouddb.sql
+    networks:
+    - uptocloudnw
+  
+  backend:
+    container_name: springbootapp
+    depends_on:
+      - postgresdb
+      - keycloak
+      - azurite
+    build: ./uptocloud
+    restart: on-failure
+    env_file: ./.env
+    ports:
+      - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
+    stdin_open: true
+    tty: true
+    networks:
+    - uptocloudnw
+  
+networks:
+  uptocloudnw: 
+    driver: "bridge"
+    
+  
