@@ -121,7 +121,7 @@ class RestManager {
         );
     } else if( files is FileDataModel)
       request.files.add(
-          await MultipartFile(files.name, files.stream, files.bytes, filename: files.name, contentType: MediaType.parse(files.mime))
+          await MultipartFile('file', files.stream, files.bytes, filename: files.name, contentType: MediaType.parse(files.mime))
       );
     else throw Exception();
     print(uri.toString());

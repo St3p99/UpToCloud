@@ -9,12 +9,12 @@ import lombok.ToString;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Objects;
 
 
 /* lombok auto-generated code */
 @Getter
 @Setter
-@EqualsAndHashCode
 @ToString
 /* lombok auto-generated code */
 
@@ -77,5 +77,18 @@ public class Document {
 
     public void removeReaders(List<User> readers){
         this.readers.removeAll(readers);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        Document d = (Document) o;
+        return Objects.equals(id, d.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.id.hashCode();
     }
 }

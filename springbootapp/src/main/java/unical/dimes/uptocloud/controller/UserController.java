@@ -36,7 +36,7 @@ public class UserController {
      * POST OPERATION
      **/
     @Operation(method = "newUser", summary = "Create a new user")
-    @GetMapping(value = "/new")
+    @PostMapping(value = "/new")
     public ResponseEntity newUser(@RequestBody @Valid User user, BindingResult bindingResult, @RequestParam(value = "pwd") String pwd) {
         if (bindingResult.hasErrors()) return ResponseEntity.badRequest().build();
         try {
@@ -44,7 +44,7 @@ public class UserController {
                     .status(HttpStatus.CREATED)
                     .body(accountingService.registerUser(user, pwd));
         } catch (UniqueKeyViolationException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("ERROR_MAIL_USER_ALREADY_EXISTS");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMsg());
         } catch (ConnectException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("ERROR_CONNECTION");
         }
@@ -81,6 +81,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('user')")
     public ResponseEntity getUserByEmailContains(@PathVariable String email) {
         try {
+            System.out.println(email);
             return ResponseEntity.ok(userService.getByEmailContains(email));
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");

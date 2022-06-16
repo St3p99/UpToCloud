@@ -81,16 +81,16 @@ class Responsive extends StatelessWidget {
         ? MediaQuery
         .of(context)
         .size
-        .width * 0.4
+        .width * 0.6
         : Responsive.isTablet(context)
         ? MediaQuery
         .of(context)
         .size
-        .width * 0.5
+        .width * 0.7
         : MediaQuery
         .of(context)
         .size
-        .width * 0.7;
+        .width * 0.9;
   }
 
   static double uploadDialogHeight(BuildContext context){

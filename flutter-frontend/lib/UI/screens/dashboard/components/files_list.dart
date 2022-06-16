@@ -41,7 +41,6 @@ class _FilesListState extends State<FilesList> {
   late MyAbstractDataTableSource datasource;
   String? _selectedOption = null;
 
-  ChangeNotifier onLongPressNotifier = new ChangeNotifier();
 
   @override
   initState() {
@@ -266,12 +265,11 @@ class _FilesListState extends State<FilesList> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (widget.isOwner && _selectedFiles.isNotEmpty) ...[
-                  shareButton(),
                   deleteButton()
                 ],
                 if (_selectedFiles.length == 1) ...[
-                  downloadButton(),
                   if (widget.isOwner) ...[
+                    shareButton(),
                     metadataButton(),
                   ],
                   moreInfoButton(),
@@ -283,13 +281,13 @@ class _FilesListState extends State<FilesList> {
 
   Widget shareButton() {
     return IconButton(
-      tooltip: _selectedFiles.length == 1 ? "Share file" : "Share files",
+      tooltip: "Share file",
       icon: SvgPicture.asset("assets/icons/add_user.svg", color: Colors.white, height: 20,),
       onPressed: () {
         showDialog(
             context: context,
             builder: (context) =>
-                PopupShare(files: datasource.getSelectedFiles()));
+                PopupShare(file: datasource.getSelectedFile()));
       },
     );
   }
@@ -345,14 +343,14 @@ class _FilesListState extends State<FilesList> {
 
   Widget shareMenuButton() {
     return TextButton.icon(
-      label: Text(_selectedFiles.length == 1 ? "Share file" : "Share files", style: TextStyle(color: Colors.white)),
+      label: Text("Share file", style: TextStyle(color: Colors.white)),
       icon: SvgPicture.asset("assets/icons/add_user.svg",
           color: Colors.white, height: 20,),
       onPressed: () {
         showDialog(
             context: context,
             builder: (context) =>
-                PopupShare(files: datasource.getSelectedFiles()));
+                PopupShare(file: datasource.getSelectedFile()));
       },
     );
   }

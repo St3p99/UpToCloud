@@ -26,6 +26,5 @@ abstract class MyAbstractDataTableSource extends DataTableSource{
 
   List<Document> getSelectedFiles() {
     return List.generate(selectedFiles.length, (index) => result!.elementAt(index));
-
   }
 }

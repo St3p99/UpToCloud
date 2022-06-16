@@ -117,9 +117,6 @@ class _DropZoneWidgetState extends State<DropZoneWidget> {
     final droppedFile = new FileDataModel(
         name: name, mime: mime, bytes: byte, stream: stream, url:url);
 
-
-    new ApiController().uploadFile(droppedFile);
-
     //Update the UI
     widget.onDroppedFile(droppedFile);
     setState(() {

@@ -1,16 +1,16 @@
 version: "3.8"
 services:
-  azurite:
-    container_name: azurite
-    image: mcr.microsoft.com/azure-storage/azurite
-    hostname: azurite
-    restart: on-failure
-    command: "azurite --blobHost 0.0.0.0 --blobPort 10000 --queueHost 0.0.0.0 --queuePort 10001"
-    ports:
-      - "10000:10000"
-      - "10001:10001"
-    networks:
-    - uptocloudnw
+  # azurite:
+  #   container_name: azurite
+  #   image: mcr.microsoft.com/azure-storage/azurite
+  #   hostname: azurite
+  #   restart: on-failure
+  #   command: "azurite --blobHost 0.0.0.0 --blobPort 10000 --queueHost 0.0.0.0 --queuePort 10001"
+  #   ports:
+  #     - "10000:10000"
+  #     - "10001:10001"
+  #   networks:
+  #   - uptocloudnw
 
   keycloak:
     container_name: keycloak
@@ -59,8 +59,8 @@ services:
     depends_on:
       - postgresdb
       - keycloak
-      - azurite
-    build: ./uptocloud
+      # - azurite
+    build: ./springbootapp
     restart: on-failure
     env_file: ./.env
     ports:

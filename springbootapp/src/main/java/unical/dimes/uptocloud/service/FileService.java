@@ -76,7 +76,7 @@ public class FileService {
         try {
             u = userService.getById(userID);
             d.setOwner(u);
-            d.setName(file.getName());
+            d.setName( file.getOriginalFilename());
             documentRepository.save(d); // Save to generate docID
 
             String mimeType = file.getContentType();
@@ -94,7 +94,7 @@ public class FileService {
 
             Map<String, String> blobMetadata = new HashMap<>();
 
-            blobMetadata.put(MetadataCategory.FILE_NAME.toString(), file.getName());
+            blobMetadata.put(MetadataCategory.FILE_NAME.toString(),  file.getOriginalFilename());
             blobMetadata.put(MetadataCategory.FILE_TYPE.toString(), mimeType);
             blobMetadata.put(MetadataCategory.ID.toString(), d.getId().toString());
             blockBlobClient.setMetadata(blobMetadata);
@@ -308,28 +308,48 @@ public class FileService {
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public void addReaders(String ownerID, List<String> readersID, List<Long> docsID) throws UnauthorizedUserException, ResourceNotFoundException{
+    public void addReaders(String ownerID, List<String> readersID, Long docID) throws UnauthorizedUserException, ResourceNotFoundException{
         User owner;
         List<User> readers = new LinkedList<>();
-        List<Document> documents = new LinkedList<>();
+        Document d;
 
         try {
             owner = userService.getById(ownerID);
             for (String readerID: readersID) {
                 readers.add(userService.getById(readerID));
             }
-            for (Long docID: docsID) {
-                Document d = documentService.getById(docID);
-                if(!d.getOwner().equals(owner)) throw new UnauthorizedUserException();
-                d.addReaders(readers);
-                documents.add(d);
+        
+            d = documentService.getById(docID);
+            if(!d.getOwner().equals(owner)) throw new UnauthorizedUserException();
+            d.addReaders(readers);
+    
+        }catch (ResourceNotFoundException e){
+            logger.warning(e.toString());
+            throw e;
+        }
+        documentRepository.save(d);
+    }
+
+        @Transactional(propagation = Propagation.REQUIRED)
+    public void removeReaders(String ownerID, List<String> readersID, Long docID) throws UnauthorizedUserException, ResourceNotFoundException{
+        User owner;
+        List<User> readers = new LinkedList<>();
+        Document d;
+
+        try {
+            owner = userService.getById(ownerID);
+            for (String readerID: readersID) {
+                readers.add(userService.getById(readerID));
             }
+            d = documentService.getById(docID);
+            if(!d.getOwner().equals(owner)) throw new UnauthorizedUserException();
+            d.removeReaders(readers);
 
         }catch (ResourceNotFoundException e){
             logger.warning(e.toString());
             throw e;
         }
-        documentRepository.saveAll(documents);
+        documentRepository.save(d);
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
@@ -353,16 +373,12 @@ public class FileService {
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public void removeReaders(String ownerID, List<String> readersID, Long docID) throws UnauthorizedUserException, ResourceNotFoundException{
+    public List<User> getReadersByDoc(String ownerID, Long docID) throws UnauthorizedUserException, ResourceNotFoundException{
         User owner;
-        List<User> readers = new LinkedList<>();
         Document d;
 
         try {
             owner = userService.getById(ownerID);
-            for (String readerID: readersID) {
-                readers.add(userService.getById(readerID));
-            }
             d = documentService.getById(docID);
         }catch (ResourceNotFoundException e){
             logger.warning(e.toString());
@@ -371,7 +387,23 @@ public class FileService {
 
         if(!d.getOwner().equals(owner)) throw new UnauthorizedUserException();
 
-        d.removeReaders(readers);
-        documentRepository.save(d);
+        return d.getReaders();
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public List<User> getShareSuggestions(String ownerID) throws ResourceNotFoundException{
+        User loggedUser;
+        List<User> suggestions = new LinkedList<>();
+        try {
+            loggedUser = userService.getById(ownerID);
+            for (Document d: loggedUser.getDocumentsOwned()) {
+                suggestions.addAll(d.getReaders());
+            }
+        }catch (ResourceNotFoundException e){
+            logger.warning(e.toString());
+            throw e;
+        }
+
+        return suggestions;
     }
 }

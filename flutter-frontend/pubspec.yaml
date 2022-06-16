@@ -45,6 +45,7 @@ dependencies:
   flutter_typeahead: ^4.0.0
   dotted_border: ^2.0.0+1
   universal_io: ^2.0.0-nullsafety.1
+  cool_alert: ^1.1.0
 
 dev_dependencies:
   flutter_test:

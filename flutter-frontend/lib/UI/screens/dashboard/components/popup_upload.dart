@@ -5,6 +5,7 @@ import 'package:admin/UI/screens/dashboard/components/drop_zone_widget.dart';
 import 'package:admin/UI/screens/dashboard/components/dropped_file_widget.dart';
 import 'package:admin/api/api_controller.dart';
 import 'package:admin/support/extensions/string_capitalization.dart';
+import 'package:cool_alert/cool_alert.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
@@ -17,7 +18,7 @@ import '../../../../models/file_data_model.dart';
 import '../../../../models/user.dart';
 import '../../../behaviors/app_localizations.dart';
 import '../../../constants.dart';
-import 'error_dialog.dart';
+import 'feedback_dialog.dart';
 
 class PopupUpload extends StatefulWidget {
   PopupUpload({
@@ -124,13 +125,15 @@ class _PopupUploadState extends State<PopupUpload> {
     StreamedResponse? response = await new ApiController().uploadFile(file!);
     switch (response!.statusCode) {
       case 200:{
+        FeedbackDialog(
+            type: CoolAlertType.success,
+            context:context, title:"SUCCESS", message:"").show();
         Navigator.pop(context);
       }break;
       default:{
-        showDialog(
-            context: context,
-            builder: (context) => ErrorDialog(title:"UNKNOWN ERROR", message:"")
-        );
+        FeedbackDialog(
+            type: CoolAlertType.error,
+            context:context, title:"UNKNOWN ERROR", message:"").show();
       }
         break;
     }

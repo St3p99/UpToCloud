@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:html';
 
@@ -70,17 +71,14 @@ class ApiController {
   }
 
   // USER
-  Future<User?> newUser(User user, String pwd) async {
+  Future<Response?> newUser(User user, String pwd) async {
     Map<String, String> params = Map();
     params["pwd"] = pwd;
     try {
       Response response = await _restManager.makePostRequest(
           ADDRESS_STORE_SERVER, REQUEST_NEW_USER, user,
           value: params);
-      if (response.statusCode == HttpStatus.created) {
-        return User.fromJson(json.decode(response.body));
-      } else
-        return null;
+      return response;
     } catch (e) {
       return null;
     }
@@ -104,7 +102,6 @@ class ApiController {
     try {
       response = await _restManager.makeGetRequest(
           ADDRESS_STORE_SERVER, REQUEST_LOAD_RECENT_FILES);
-      print(response.body);
       if (response.statusCode == HttpStatus.noContent) return List.empty(growable: false);
       return List<Document>.from(json
             .decode(response.body)
@@ -138,7 +135,7 @@ class ApiController {
 Future<User?> searchUserByEmail(String email) async {
     try {
       Response response = await _restManager.makeGetRequest(
-          ADDRESS_STORE_SERVER, REQUEST_SEARCH_USER_BY_EMAIL + "/" + email);
+          ADDRESS_STORE_SERVER, REQUEST_SEARCH_USER_BY_EMAIL + "/" + email.trim());
       if (response.statusCode == HttpStatus.notFound) return null;
       return User.fromJson(jsonDecode(response.body));
     } catch (e) {
@@ -150,7 +147,7 @@ Future<User?> searchUserByEmail(String email) async {
   Future<User?> searchUserByEmailContains(String email) async {
     try {
       Response response = await _restManager.makeGetRequest(
-          ADDRESS_STORE_SERVER, REQUEST_SEARCH_USER_BY_EMAIL_CONTAINS + "/" + email);
+          ADDRESS_STORE_SERVER, REQUEST_SEARCH_USER_BY_EMAIL_CONTAINS + "/" + email.trim());
       if (response.statusCode == HttpStatus.notFound) return null;
       return User.fromJson(jsonDecode(response.body));
     } catch (e) {
@@ -183,10 +180,10 @@ Future<User?> searchUserByEmail(String email) async {
     return response;
   }
 
-  Future<Response?> addReaders(List<Document> document, List<User> user) async{
+  Future<Response?> addReaders(Document document, List<User> user) async{
     try {
       Map<String, dynamic> params = Map();
-      params["files_id"] = document.map((d) => d.id.toString());
+      params["file_id"] = document.id.toString();
       params["readers_id"] = user.map((u) => u.id);
       Response response = await _restManager.makePutRequest(
         ADDRESS_STORE_SERVER, REQUEST_ADD_READERS, params);
@@ -194,6 +191,55 @@ Future<User?> searchUserByEmail(String email) async {
       return response;
     } catch (e) {
       print("addReaders exception: " + e.toString());
+      return null;
+    }
+  }
+
+  Future<Response?> deleteReaders(Document document, List<User> user) async{
+    try {
+      Map<String, dynamic> params = Map();
+      params["file_id"] = document.id.toString();
+      params["readers_id"] = user.map((u) => u.id);
+      Response response = await _restManager.makePutRequest(
+          ADDRESS_STORE_SERVER, REQUEST_REMOVE_READERS, params);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      return response;
+    } catch (e) {
+      print("deleteReaders exception: " + e.toString());
+      return null;
+    }
+  }
+
+  Future<List<User>?> getReadersByDoc(int docID) async{
+    try {
+      Map<String, dynamic> params = Map();
+      params["file_id"] = docID.toString();
+      Response response = await _restManager.makeGetRequest(
+          ADDRESS_STORE_SERVER, REQUEST_GET_READERS_BY_DOC, params);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      if (response.statusCode == HttpStatus.noContent) return List.empty(growable: false);
+      return List<User>.from(json
+          .decode(response.body)
+          .map((i) => User.fromJson(i))
+          .toList());
+    } catch (e) {
+      print("getReadersByDoc exception: " + e.toString());
+      return null;
+    }
+  }
+
+  Future<List<User>?> getShareSuggestions() async{
+    try {
+      Response response = await _restManager.makeGetRequest(
+          ADDRESS_STORE_SERVER, REQUEST_SHARE_SUGGESTIONS);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      if (response.statusCode == HttpStatus.noContent) return List.empty(growable: true);
+      return List<User>.from(json
+          .decode(response.body)
+          .map((i) => User.fromJson(i))
+          .toList());
+    } catch (e) {
+      print("getShareSuggestions exception: " + e.toString());
       return null;
     }
   }

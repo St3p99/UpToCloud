@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /* lombok auto-generated code */
 @Getter
@@ -71,5 +72,18 @@ public class DocumentMetadata {
 
     public LocalDateTime getUploadedAtLocalDateTime(){
         return document.getMetadata().getUploadedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        DocumentMetadata d = (DocumentMetadata) o;
+        return Objects.equals(id, d.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.id.hashCode();
     }
 }

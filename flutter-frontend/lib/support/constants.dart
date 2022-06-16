@@ -35,8 +35,12 @@ const String REQUEST_NEW_USER = "/api/users/new";
 
 // FILE CONTROLLER
 const String REQUEST_ADD_READERS = "/api/files/add-readers";
+const String REQUEST_REMOVE_READERS = "/api/files/remove-readers";
+const String REQUEST_SHARE_SUGGESTIONS = "/api/files/share-suggestions";
+const String REQUEST_GET_READERS_BY_DOC = "/api/files/readersByDoc";
 const String REQUEST_UPLOAD_FILES = "api/files/upload-multiple";
 const String REQUEST_UPLOAD_FILE = "api/files/upload";
+
 
 // ERROR MESSAGE
 const String ERROR_RESERVATION_ALREADY_EXIST =
@@ -54,6 +58,8 @@ const String STORAGE_EMAIL = "email";
 const String RESPONSE_ERROR_MAIL_USER_ALREADY_EXISTS =
     "ERROR_MAIL_USER_ALREADY_EXISTS";
 
+const String RESPONSE_ERROR_USERNAME_ALREADY_EXISTS =
+    "ERROR_USERNAME_ALREADY_EXISTS";
 // messages
 const String MESSAGE_CONNECTION_ERROR = "connection_error";
 

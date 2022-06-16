@@ -66,7 +66,10 @@ public class AccountingService {
     @Transactional
     public User registerUser(User user, String pwd) throws UniqueKeyViolationException, ConnectException {
         if (userRepository.existsByEmail(user.getEmail().toLowerCase())) {
-            throw new UniqueKeyViolationException();
+            throw new UniqueKeyViolationException("ERROR_MAIL_USER_ALREADY_EXISTS");
+        }
+        if (userRepository.existsByUsername(user.getUsername().toLowerCase())) {
+            throw new UniqueKeyViolationException("ERROR_USERNAME_ALREADY_EXISTS");
         }
         String userId = registerUserOnKeycloak(user, pwd);
         user.setId(userId);

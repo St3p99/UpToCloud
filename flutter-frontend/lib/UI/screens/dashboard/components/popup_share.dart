@@ -1,8 +1,10 @@
 import 'dart:collection';
 
 import 'package:admin/UI/responsive.dart';
+import 'package:admin/UI/screens/dashboard/components/readers_list.dart';
 import 'package:admin/api/api_controller.dart';
 import 'package:admin/support/extensions/string_capitalization.dart';
+import 'package:cool_alert/cool_alert.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -13,15 +15,15 @@ import '../../../../models/document.dart';
 import '../../../../models/user.dart';
 import '../../../behaviors/app_localizations.dart';
 import '../../../constants.dart';
-import 'error_dialog.dart';
+import 'feedback_dialog.dart';
 
 class PopupShare extends StatefulWidget {
   PopupShare({
     Key? key,
-    required this.files,
+    required this.file,
   }) : super(key: key);
 
-  List<Document> files;
+  Document file;
 
   @override
   _PopupShareState createState() => _PopupShareState();
@@ -36,20 +38,7 @@ class _PopupShareState extends State<PopupShare> {
 
   late List<User> _selectedUsers = List.empty(growable: true);
 
-  HashSet<User> _suggestions = HashSet.from({
-    User(id: "2", username: 'Alice', email: 'alice@example.com'),
-    User(id: "3", username: 'Bob', email: 'bob@example.com'),
-    User(id: "4", username: 'Charlie', email: 'charlie123@gmail.com'),
-    User(id: "2", username: 'Alice', email: 'alice@example.com'),
-    User(id: "3", username: 'Bob', email: 'bob@example.com'),
-    User(id: "4", username: 'Charlie', email: 'charlie123@gmail.com'),
-    User(id: "2", username: 'Alice', email: 'alice@example.com'),
-    User(id: "3", username: 'Bob', email: 'bob@example.com'),
-    User(id: "4", username: 'Charlie', email: 'charlie123@gmail.com'),
-    User(id: "2", username: 'Alice', email: 'alice@example.com'),
-    User(id: "3", username: 'Bob', email: 'bob@example.com'),
-    User(id: "4", username: 'Charlie', email: 'charlie123@gmail.com'),
-  });
+  HashSet<User> _suggestions = new HashSet();
 
   late FocusNode _focusNode;
 
@@ -59,6 +48,7 @@ class _PopupShareState extends State<PopupShare> {
 
   @override
   void initState() {
+    _initSuggestions();
     super.initState();
     _focusNode = FocusNode();
     _typeAheadController.addListener(() => refreshState(() {}));
@@ -71,20 +61,36 @@ class _PopupShareState extends State<PopupShare> {
     _typeAheadController.dispose();
   }
 
-  void _pushData() async{
-    Response? response = await new ApiController().addReaders(widget.files, _selectedUsers);
-    switch (response!.statusCode) {
-      case 200:{
-        Navigator.pop(context);
-      }break;
-      default:{
-        return showDialog(
-            context: context,
-            builder: (context) => ErrorDialog(title:"UNKNOWN ERROR", message:"")
-        );
+  void _initSuggestions() async{
+    List<User>? result = await new ApiController().getShareSuggestions();
+    if(result!=null)
+      setState(() {_suggestions = HashSet.from(result);});
+  }
 
-      }
-      break;
+  void _pushData() async {
+    Response? response =
+        await new ApiController().addReaders(widget.file, _selectedUsers);
+    switch (response!.statusCode) {
+      case 200:
+        {
+          FeedbackDialog(
+                  type: CoolAlertType.success,
+                  context: context,
+                  title: "SUCCESS",
+                  message: "")
+              .show();
+        }
+        break;
+      default:
+        {
+          FeedbackDialog(
+                  type: CoolAlertType.error,
+                  context: context,
+                  title: "UNKNOWN ERROR",
+                  message: "")
+              .show();
+        }
+        break;
     }
   }
 
@@ -101,120 +107,129 @@ class _PopupShareState extends State<PopupShare> {
         actionsPadding: EdgeInsets.all(defaultPadding * 2),
         backgroundColor: secondaryColor,
         content: Container(
-          width: Responsive.shareDialogWidth(context),
-          height: Responsive.shareDialogHeight(context),
-          child: SingleChildScrollView(
-              child: Center(
-            child: Form(
-              key: _formKey,
-              child: Column(children: [
-                Text(
-                  widget.files.length > 1
-                      ? "Share " + widget.files.length.toString() + " files"
-                      : "Share \"" + widget.files.first.name+"\"",
-                  style: Theme.of(context).textTheme.headline6,
-                ),
-                Padding(
-                  padding: EdgeInsets.only(bottom: defaultPadding),
-                ),
-                if (_selectedUsers.length > 0) ...[
-                  Wrap(
-                    alignment: WrapAlignment.start,
-                    children: _selectedUsers
-                        .map((user) => chip(
-                              user: user,
-                              onTap: () => _removeUser(user),
-                              action: 'remove',
-                            ))
-                        .toSet()
-                        .toList(),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: defaultPadding / 2),
-                  ),
-                ] else
-                  SizedBox(),
-                TypeAheadFormField(
-                  validator: (value) => _validateEmail(value!),
-                  textFieldConfiguration: TextFieldConfiguration(
-                    onChanged: (String value) async {
-                      if (_getSuggestions(value).isNotEmpty) return;
-                      if (_validateEmail(value)==null) {
-                        User? user = await _getUser(value);
-                        if (user != null) _suggestions.add(user);
-                      }
-                    },
-                    onSubmitted: (String value) async{
-                      if (_formKey.currentState!.validate() && _suggestions.isNotEmpty){
-                        _addUser(_getSuggestions(value).first);
-                        _typeAheadController.clear();
-                      }
-                    },
-                    controller: _typeAheadController,
-                    focusNode: _focusNode,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      labelText: 'Add users',
-                      fillColor: secondaryColor,
-                      filled: true,
-                      border: OutlineInputBorder(
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(10)),
-                      ),
-                    ),
-                  ),
-                  suggestionsCallback: (pattern) async {
-                    return _getSuggestions(pattern);
-                  },
-                  suggestionsBoxDecoration: SuggestionsBoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                      shadowColor: Colors.white70,
-                      constraints: BoxConstraints(
-                          maxHeight: Responsive.shareDialogHeight(context)*5/4)),
-                  noItemsFoundBuilder: (context) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(
-                        'No Items Found!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: Theme.of(context).disabledColor,
-                            fontSize: Theme.of(context)
-                                .textTheme
-                                .subtitle1!
-                                .fontSize),
-                      ),
-                    );
-                  },
-                  itemBuilder: (context, User suggestion) {
-                    return ListTile(
-                      leading: SvgPicture.asset(
-                        "icons/menu_profile.svg",
-                        color: Colors.white,
-                        height: 20,
-                      ),
-                      title: Text(suggestion.username.capitalize),
-                      subtitle: Text(
-                        suggestion.email.toLowerCase(),
-                        style: Theme.of(context)
-                            .textTheme
-                            .subtitle1!
-                            .copyWith(color: Colors.white54),
-                      ),
-                    );
-                  },
-                  onSuggestionSelected: (User suggestion) {
-                    _addUser(suggestion);
-                    _typeAheadController.clear();
-                  },
-                ),
-                // Padding(
-                //     padding: EdgeInsets.symmetric(vertical: defaultPadding)),
-                //TODO: Add list of current readers
-              ]),
-            ),
-          )),
-        ),
+            width: Responsive.shareDialogWidth(context),
+            height: Responsive.shareDialogHeight(context),
+            child: SingleChildScrollView(
+                child: Center(
+                    child: Form(
+                        key: _formKey,
+                        child: Column(children: [
+                          Text(
+                            "Share \"" + widget.file.name + "\"",
+                            style: Theme.of(context).textTheme.headline6,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: defaultPadding),
+                          ),
+                          if (_selectedUsers.length > 0) ...[
+                            Wrap(
+                              alignment: WrapAlignment.start,
+                              children: _selectedUsers
+                                  .map((user) => chip(
+                                        user: user,
+                                        onTap: () => _removeUser(user),
+                                        action: 'remove',
+                                      ))
+                                  .toSet()
+                                  .toList(),
+                            ),
+                            Padding(
+                              padding:
+                                  EdgeInsets.only(bottom: defaultPadding / 2),
+                            ),
+                          ] else
+                            SizedBox(),
+                          TypeAheadFormField(
+                            validator: (value) => _validateEmail(value!),
+                            textFieldConfiguration: TextFieldConfiguration(
+                              onChanged: (String value) async {
+                                if (_getSuggestions(value).isNotEmpty) return;
+                                if (_validateEmail(value) == null) {
+                                  User? user = await _getUser(value);
+                                  if (user != null) _suggestions.add(user);
+                                }
+                              },
+                              onSubmitted: (String value) async {
+                                if (_formKey.currentState!.validate() &&
+                                    _suggestions.isNotEmpty) {
+                                  _addUser(_getSuggestions(value).first);
+                                  _typeAheadController.clear();
+                                }
+                              },
+                              controller: _typeAheadController,
+                              focusNode: _focusNode,
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                labelText: 'Add users',
+                                fillColor: secondaryColor,
+                                filled: true,
+                                border: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10)),
+                                ),
+                              ),
+                            ),
+                            suggestionsCallback: (pattern) async {
+                              return _getSuggestions(pattern);
+                            },
+                            suggestionsBoxDecoration: SuggestionsBoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10)),
+                                shadowColor: Colors.white70,
+                                constraints: BoxConstraints(
+                                    maxHeight:
+                                        Responsive.shareDialogHeight(context) *
+                                            5 /
+                                            4)),
+                            noItemsFoundBuilder: (context) {
+                              return Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Text(
+                                  'No Items Found!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: Theme.of(context).disabledColor,
+                                      fontSize: Theme.of(context)
+                                          .textTheme
+                                          .subtitle1!
+                                          .fontSize),
+                                ),
+                              );
+                            },
+                            itemBuilder: (context, User suggestion) {
+                              return ListTile(
+                                leading: SvgPicture.asset(
+                                  "icons/menu_profile.svg",
+                                  color: Colors.white,
+                                  height: 20,
+                                ),
+                                title: Text(suggestion.username.capitalize),
+                                subtitle: Text(
+                                  suggestion.email.toLowerCase(),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .subtitle1!
+                                      .copyWith(color: Colors.white54),
+                                ),
+                              );
+                            },
+                            onSuggestionSelected: (User suggestion) {
+                              _addUser(suggestion);
+                              _typeAheadController.clear();
+                            },
+                          ),
+                          Padding(
+                              padding: EdgeInsets.only(bottom: defaultPadding)),
+                          Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                    flex: 5,
+                                    child: ReadersList(
+                                        title: "People with reading access",
+                                        document: widget.file))
+                              ]),
+                        ]))))),
         actions: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             ButtonTheme(
@@ -225,7 +240,7 @@ class _PopupShareState extends State<PopupShare> {
                   padding: EdgeInsets.symmetric(
                     horizontal: defaultPadding * 1.5,
                     vertical:
-                    defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
+                        defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
                   ),
                 ),
                 onPressed: () {
@@ -242,7 +257,7 @@ class _PopupShareState extends State<PopupShare> {
                   padding: EdgeInsets.symmetric(
                     horizontal: defaultPadding * 1.5,
                     vertical:
-                    defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
+                        defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
                   ),
                 ),
                 onPressed: () {
@@ -267,8 +282,7 @@ class _PopupShareState extends State<PopupShare> {
   }
 
   Future<User?> _getUser(String email) async {
-    User fakeUser =
-        new User(id: "", username: "", email: email);
+    User fakeUser = new User(id: "", username: "", email: email);
     if (_suggestions.contains(fakeUser))
       return Future.value(_suggestions.lookup(fakeUser));
     else

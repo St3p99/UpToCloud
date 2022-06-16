@@ -28,11 +28,6 @@ class SideMenu extends StatelessWidget {
               Provider.of<MenuController>(context, listen: false).updateWidget(HomeScreen());
             },
           ),
-          // DrawerListTile(
-          //   title: "My Documents",
-          //   svgSrc: "assets/icons/menu_doc.svg",
-          //   press: () {},
-          // ),
           DrawerListTile(
             title: "Search",
             svgSrc: "assets/icons/Search.svg",

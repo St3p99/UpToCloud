@@ -5,17 +5,19 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.builder.EqualsExclude;
+import org.apache.commons.lang3.builder.HashCodeExclude;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /* lombok auto-generated code */
 @Getter
 @Setter
-@EqualsAndHashCode
 @ToString
 /* lombok auto-generated code */
 
@@ -64,4 +66,17 @@ public class User {
     @ManyToMany(mappedBy = "readers", cascade = CascadeType.ALL)
     @Column(insertable = false, updatable = false)
     private Set<Document> documentsReadable;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.id.hashCode();
+    }
 }

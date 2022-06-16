@@ -1,5 +1,6 @@
 import 'package:admin/UI/constants.dart';
 import 'package:admin/UI/screens/auth/login_screen.dart';
+import 'package:admin/UI/screens/auth/signup_screen.dart';
 import 'package:admin/UI/screens/main/main_screen.dart';
 import 'package:admin/controllers/menu_controller.dart';
 import 'package:admin/support/constants.dart';
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         navigatorKey: NavigationService.instance.navigationKey,
         routes: {
           LoginScreen.routeName: (context) => LoginScreen(),
+          SignupScreen.routeName: (context) => SignupScreen(),
           MainScreen.routeName: (context) => MainScreen(),
         },
         home: MultiProvider(
