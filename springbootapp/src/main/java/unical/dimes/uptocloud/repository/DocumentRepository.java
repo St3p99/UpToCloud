@@ -12,4 +12,7 @@ import java.util.Optional;
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     Optional<Document> getByOwnerAndName(User owner, String filename);
+
+    boolean existsByNameAndOwner(String name, User u);
+
 }

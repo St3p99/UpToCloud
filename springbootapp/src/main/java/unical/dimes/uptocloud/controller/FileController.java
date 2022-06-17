@@ -13,12 +13,14 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import unical.dimes.uptocloud.model.Document;
-import unical.dimes.uptocloud.model.User;
 import unical.dimes.uptocloud.model.DocumentMetadata;
+import unical.dimes.uptocloud.model.EditMetadataModel;
+import unical.dimes.uptocloud.model.User;
 import unical.dimes.uptocloud.service.FileService;
 import unical.dimes.uptocloud.support.exception.FileSizeExceededException;
 import unical.dimes.uptocloud.support.exception.ResourceNotFoundException;
 import unical.dimes.uptocloud.support.exception.UnauthorizedUserException;
+import unical.dimes.uptocloud.support.exception.UniqueKeyViolationException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,51 +47,60 @@ public class FileController {
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> uploadFile(@AuthenticationPrincipal Jwt principal, @RequestParam("file") MultipartFile file) {
         try {
-            if (fileService.uploadDocument(principal.getSubject(), file) != null) {
-                return ResponseEntity.status(200).build();
-            } else {
-                return ResponseEntity.ok("Error");
-            }
+            Document d = fileService.uploadDocument(principal.getSubject(), file);
+            return ResponseEntity.status(200).body(d);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
-        } catch (FileSizeExceededException e) {
+        }catch (UniqueKeyViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        catch (FileSizeExceededException e) {
             return ResponseEntity.badRequest().body("File size exceeded -- FILE SIZE LIMIT: " + max_file_size + "MB");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
     }
 
-//    @Operation(method = "uploadFileAndMetadata", summary = "Upload a file as a blob in the user's container")
-//    @PreAuthorize("hasAuthority('user')")
-//    @PostMapping(value = "/upload_w_metadata", consumes = {  MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE })
-//    public ResponseEntity<?> uploadFileAndMetadata(@AuthenticationPrincipal Jwt principal,
-//                                                   @RequestPart("metadata") Map<String, String> metadata,
-//                                                   @RequestPart("file") MultipartFile file) {
-//        try {
-//            if (fileService.uploadDocumentAndMetadata(principal.getSubject(), file, metadata) != null) {
-//                return ResponseEntity.status(200).build();
-//            }
-//            else{
-//                return ResponseEntity.ok("Error");
-//            }
-//        }
-//        catch (ResourceNotFoundException e) {
-//            return ResponseEntity.notFound().build();
-//        } catch (IOException e) {
-//            return ResponseEntity.internalServerError().build();
-//        }
-//    }
+    @Operation(method = "deleteFile", summary = "Upload a file as a blob in the user's container")
+    @PreAuthorize("hasAuthority('user')")
+    @DeleteMapping(value = "/delete/{doc_id}")
+    public ResponseEntity<?> deleteFile(@AuthenticationPrincipal Jwt principal, @PathVariable("doc_id") Long docID) {
+        try {
+            fileService.deleteDocument(principal.getSubject(), docID);
+            return ResponseEntity.status(200).build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (UnauthorizedUserException e) {
+            return ResponseEntity.badRequest().body("User must be the owner of the specified document");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @Operation(method = "deleteFiles", summary = "Upload a file as a blob in the user's container")
+    @PreAuthorize("hasAuthority('user')")
+    @DeleteMapping(value = "/delete")
+    public ResponseEntity<?> deleteFiles(@AuthenticationPrincipal Jwt principal, @RequestParam("docs_id") List<Long> docsID) {
+        try {
+            fileService.deleteDocuments(principal.getSubject(), docsID);
+            return ResponseEntity.status(200).build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (UnauthorizedUserException e) {
+            return ResponseEntity.badRequest().body("User must be the owner of the specified document");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
     @Operation(method = "setMetadata", summary = "Set metadata for the specified document")
     @PreAuthorize("hasAuthority('user')")
     @PostMapping(value = "/set_metadata/{doc_id}", consumes = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> setMetadata(@AuthenticationPrincipal Jwt principal,
                                          @PathVariable("doc_id") Long docID,
-                                         @RequestParam("filename") String filename,
-                                         @RequestParam("description") String description,
-                                         @RequestParam("tags") Set<String> tags) {
+                                         @RequestBody EditMetadataModel body) {
         try {
-            fileService.setMetadata(principal.getSubject(), docID, filename, description, tags);
+            fileService.setMetadata(principal.getSubject(), docID, body.getFilename(), body.getDescription(), body.getTags());
             return ResponseEntity.status(200).build();
         } catch (UnauthorizedUserException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User must be the owner of the specified document");

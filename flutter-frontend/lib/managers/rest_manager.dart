@@ -29,13 +29,11 @@ class RestManager {
     print(uri.toString());
     try {
       late Response response;
-      late String contentType;
+      String? contentType;
       dynamic formattedBody;
 
       // setting content-type
-      if (type == null) {
-        contentType = "";
-      } else if (type == TypeHeader.json) {
+      if (type == TypeHeader.json) {
         contentType = "application/json;charset=utf-8";
         formattedBody = json.encode(body);
       } else if (type == TypeHeader.urlencoded) {
@@ -45,7 +43,8 @@ class RestManager {
 
       // setting headers
       Map<String, String> headers = Map();
-      headers[HttpHeaders.contentTypeHeader] = contentType;
+
+      if(contentType != null)headers[HttpHeaders.contentTypeHeader] = contentType;
       if (token != null) {
         headers[HttpHeaders.authorizationHeader] = 'bearer $token';
       }

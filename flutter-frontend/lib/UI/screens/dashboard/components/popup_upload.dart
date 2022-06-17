@@ -1,4 +1,6 @@
 import 'dart:collection';
+import 'dart:html';
+import 'dart:ui' as ui;
 
 import 'package:admin/UI/responsive.dart';
 import 'package:admin/UI/screens/dashboard/components/drop_zone_widget.dart';
@@ -32,7 +34,7 @@ class PopupUpload extends StatefulWidget {
 class _PopupUploadState extends State<PopupUpload> {
   FileDataModel? file;
 
-  refreshState(VoidCallback fn) {
+  refreshState(ui.VoidCallback fn) {
     if (mounted) setState(fn);
   }
 
@@ -125,7 +127,7 @@ class _PopupUploadState extends State<PopupUpload> {
   Future<void> _upload() async {
     StreamedResponse? response = await new ApiController().uploadFile(file!);
     switch (response!.statusCode) {
-      case 200:
+      case HttpStatus.ok:
         {
           FeedbackDialog(
               type: CoolAlertType.success,
@@ -133,6 +135,16 @@ class _PopupUploadState extends State<PopupUpload> {
               title: "SUCCESS",
               message: "")
               .show().whenComplete(() => Navigator.pop(context));
+        }
+        break;
+      case HttpStatus.conflict:
+        {
+          FeedbackDialog(
+              type: CoolAlertType.error,
+              context: context,
+              title: "CONFLICT!",
+              message: "File with this name already exists")
+              .show();
         }
         break;
       default:

@@ -4,6 +4,7 @@ import 'dart:html';
 
 import 'package:admin/models/authentication_data.dart';
 import 'package:admin/models/document.dart';
+import 'package:admin/models/edit_metadata_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
@@ -168,31 +169,56 @@ Future<User?> searchUserByEmail(String email) async {
     return response;
   }
 
+  Future<Response?> deleteFile(Document d) async{
+    late Response response;
+    try {
+      response = await _restManager.makeDeleteRequest(
+          ADDRESS_STORE_SERVER, REQUEST_DELETE_FILE + "/" + d.id.toString());
+    }catch(e){
+      print("deleteFile exception: "+e.toString());
+      return null;
+    }
+    return response;
+  }
+
+  Future<Response?> deleteFiles(List<Document> docs) async{
+    try {
+      Map<String, dynamic> params = Map();
+      params["docs_id"] = docs.map((d) => d.id.toString());
+      Response response = await _restManager.makeDeleteRequest(
+          ADDRESS_STORE_SERVER, REQUEST_DELETE_FILE, params);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      return response;
+    } catch (e) {
+      print("deleteFiles exception: " + e.toString());
+      return null;
+    }
+  }
+
   Future<StreamedResponse?> uploadFile(FileDataModel file) async{
     late StreamedResponse response;
     try {
       response = await _restManager.makeMultiPartRequest(
           ADDRESS_STORE_SERVER, REQUEST_UPLOAD_FILE, file);
     }catch(e){
-      print("uploadFiles exception: "+e.toString());
+      print("uploadFile exception: "+e.toString());
       return null;
     }
     return response;
   }
 
-  Future<Response?> setMetadata(int docID, String filename, String? description, List<String>? tags) async{
+
+  Future<Response?> setMetadata(int docID, String filename, String description, List<String> tags) async{
     try {
-      Map<String, dynamic> params = Map();
-      params["filename"] = filename;
-      if(description != null) params["description"] = description;
-      else params["description"] = description;
-      params["tags"] = tags;
+      EditMetadataModel body = EditMetadataModel(
+          filename: filename, description: description,
+          tags:tags.length > 0 ? tags: null);
       Response response = await _restManager.makePostRequest(
-          ADDRESS_STORE_SERVER, REQUEST_SET_METADATA + "/" + docID.toString(), null, value:params);
+          ADDRESS_STORE_SERVER, REQUEST_SET_METADATA + "/" + docID.toString(), body);
       if (response.statusCode == HttpStatus.notFound) return null;
       return response;
     } catch (e) {
-      print("addReaders exception: " + e.toString());
+      print("setMetadata exception: " + e.toString());
       return null;
     }
   }

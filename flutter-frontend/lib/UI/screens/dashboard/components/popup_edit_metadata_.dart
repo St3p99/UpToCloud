@@ -29,7 +29,7 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
   String get _inputTags => _tagsEditingController.text.trim();
 
   late String _filename;
-  String? _description;
+  late String _description;
   late List<String> _tags;
   late List<String> _suggestions = ["test1", "non", "ho", "fantasia"];
   late FocusNode _focusNode;
@@ -43,10 +43,11 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
     setState((){
       _filename = widget.file.name;
       if(widget.file.metadata.description != null)
-        _description = widget.file.metadata.description;
+        _description = widget.file.metadata.description!;
+      else _description = "";
       if(widget.file.metadata.tags != null)
         _tags = widget.file.metadata.tags!;
-      else _tags = List.empty();
+      else _tags = List.empty(growable: true);
     });
 
     super.initState();

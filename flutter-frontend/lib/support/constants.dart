@@ -40,6 +40,7 @@ const String REQUEST_SHARE_SUGGESTIONS = "/api/files/share-suggestions";
 const String REQUEST_GET_READERS_BY_DOC = "/api/files/readersByDoc";
 const String REQUEST_UPLOAD_FILES = "api/files/upload-multiple";
 const String REQUEST_UPLOAD_FILE = "api/files/upload";
+const String REQUEST_DELETE_FILE = "api/files/delete";
 
 
 // ERROR MESSAGE

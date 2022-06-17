@@ -13,11 +13,16 @@ class AuthenticationData {
 
   factory AuthenticationData.fromJson(Map<String, dynamic> json) {
     return AuthenticationData(
-      accessToken: json['access_token'] == null ? null : json['access_token'],
-      refreshToken:  json['refreshToken'] == null ? null : json['refreshToken'],
-      error: json['error'] == null ? null : json['error'],
-      expiresIn: json['expiresIn'] == null ? null : json['expiresIn']
+      accessToken: json['access_token'],
+      refreshToken:  json['refresh_token'],
+      error: json['error'],
+      expiresIn: json['expires_in'],
     );
+  }
+
+  @override
+  String toString() {
+    return 'AuthenticationData{accessToken: $accessToken, refreshToken: $refreshToken, error: $error, expiresIn: $expiresIn}';
   }
 
   bool hasError() {

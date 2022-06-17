@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:admin/UI/screens/dashboard/components/delete_files_alert_dialog.dart';
 import 'package:admin/UI/screens/dashboard/components/file_datatable_source.dart';
 import 'package:admin/UI/screens/dashboard/components/popup_edit_metadata_.dart';
 import 'package:admin/UI/screens/dashboard/components/popup_share.dart';
@@ -275,7 +276,7 @@ class _FilesListState extends State<FilesList> {
         showDialog(
             context: context,
             builder: (context) =>
-                PopupShare(file: datasource.getSelectedFile()));
+                PopupShare(file: datasource.getSelectedFile())).whenComplete(() => fetch);
       },
     );
   }
@@ -288,7 +289,12 @@ class _FilesListState extends State<FilesList> {
         color: Colors.white,
         height: 20,
       ),
-      onPressed: () {},
+      onPressed: () {
+        DeleteFilesAlertDialog(
+            context: context,
+          files: datasource.getSelectedFiles()
+        ).show().whenComplete(() => fetch());
+      }
     );
   }
 
@@ -316,7 +322,7 @@ class _FilesListState extends State<FilesList> {
         showDialog(
             context: context,
             builder: (context) =>
-                PopupEditMetadata(file: datasource.getSelectedFile()));
+                PopupEditMetadata(file: datasource.getSelectedFile())).whenComplete(() => fetch);
       },
     );
   }
@@ -358,7 +364,7 @@ class _FilesListState extends State<FilesList> {
         showDialog(
             context: context,
             builder: (context) =>
-                PopupShare(file: datasource.getSelectedFile()));
+                PopupShare(file: datasource.getSelectedFile())).whenComplete(() => fetch);
       },
     );
   }
@@ -372,7 +378,12 @@ class _FilesListState extends State<FilesList> {
         color: Colors.white,
         height: 20,
       ),
-      onPressed: () {},
+      onPressed: () {
+        DeleteFilesAlertDialog(
+            context: context,
+            files: datasource.getSelectedFiles()
+        ).show().whenComplete(() => fetch());
+      },
     );
   }
 
@@ -400,7 +411,7 @@ class _FilesListState extends State<FilesList> {
         showDialog(
             context: context,
             builder: (context) =>
-                PopupEditMetadata(file: datasource.getSelectedFile()));
+                PopupEditMetadata(file: datasource.getSelectedFile())).whenComplete(() => fetch);
       },
     );
   }

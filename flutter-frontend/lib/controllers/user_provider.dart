@@ -59,10 +59,12 @@ class UserProvider with ChangeNotifier{
             return LoginResult.error_unknown;
           }
         }
+
         _persistentStorageManager.setString(
             STORAGE_REFRESH_TOKEN, _authenticationData.refreshToken!);
         _persistentStorageManager.setString(STORAGE_EMAIL, email);
         _currentUser = await api.loadUserLoggedData();
+        if(_currentUser == null) return LoginResult.error_unknown;
         Timer.periodic(Duration(seconds: (_authenticationData.expiresIn! - 50)),
             (Timer t) async {
           bool result = await _refreshToken();
@@ -86,6 +88,7 @@ class UserProvider with ChangeNotifier{
   }
 
   Future<bool> autoLogin() async {
+    _loginStatus = LoginStatus.Authenticating;
     String? email = await _persistentStorageManager.getString(STORAGE_EMAIL);
     String? refreshToken = await _persistentStorageManager.getString(STORAGE_REFRESH_TOKEN);
     if (refreshToken != null && email != null) {
@@ -100,6 +103,7 @@ class UserProvider with ChangeNotifier{
         return true;
       }
     }
+    _loginStatus = LoginStatus.Unauthenticated;
     return false;
   }
 
@@ -122,7 +126,7 @@ class UserProvider with ChangeNotifier{
 
   Future<bool> logout() async {
     try {
-      Response response = await api.logout(_authenticationData.refreshToken!);
+      await api.logout(_authenticationData.refreshToken!);
       // if (response.statusCode != 200)
       _persistentStorageManager.remove(STORAGE_REFRESH_TOKEN);
       _persistentStorageManager.remove(STORAGE_EMAIL);

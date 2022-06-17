@@ -63,7 +63,7 @@ public class User {
 
     @ToString.Exclude
     @JsonIgnore
-    @ManyToMany(mappedBy = "readers", cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "readers")
     @Column(insertable = false, updatable = false)
     private Set<Document> documentsReadable;
 

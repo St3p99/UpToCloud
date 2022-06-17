@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:admin/UI/responsive.dart';
 import 'package:admin/UI/screens/dashboard/components/readers_list.dart';
 import 'package:admin/api/api_controller.dart';
+import 'package:admin/controllers/user_provider.dart';
 import 'package:admin/support/extensions/string_capitalization.dart';
 import 'package:cool_alert/cool_alert.dart';
 import 'package:email_validator/email_validator.dart';
@@ -287,6 +288,7 @@ class _PopupShareState extends State<PopupShare> {
   }
 
   Future<User?> _getUser(String email) async {
+    if(new UserProvider().currentUser!.email == email) return null;
     User fakeUser = new User(id: "", username: "", email: email);
     if (_suggestions.contains(fakeUser))
       return Future.value(_suggestions.lookup(fakeUser));

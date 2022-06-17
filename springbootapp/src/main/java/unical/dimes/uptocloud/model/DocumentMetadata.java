@@ -36,7 +36,7 @@ public class DocumentMetadata {
     private Long id;
 
     @JsonBackReference
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne()
     @JoinColumn(name = "document_id", unique = true, nullable = false)
     public Document document;
 

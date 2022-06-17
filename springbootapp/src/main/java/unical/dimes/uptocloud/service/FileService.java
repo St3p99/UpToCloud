@@ -19,6 +19,7 @@ import unical.dimes.uptocloud.repository.TagRepository;
 import unical.dimes.uptocloud.support.exception.FileSizeExceededException;
 import unical.dimes.uptocloud.support.exception.ResourceNotFoundException;
 import unical.dimes.uptocloud.support.exception.UnauthorizedUserException;
+import unical.dimes.uptocloud.support.exception.UniqueKeyViolationException;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -64,40 +65,40 @@ public class FileService {
 
     }
 
-    public Document uploadDocument(String userID, MultipartFile file) throws Exception {
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+    public Document uploadDocument(String userID, MultipartFile file) throws UniqueKeyViolationException, Exception {
         if(file.getSize() > FileUtils.ONE_MB*max_file_size)
             throw new FileSizeExceededException();
-
-
-        User u;
+        User u = null;
         Document d = new Document();
         DocumentMetadata dm;
+        String resourceUrl = null;
         boolean success = false;
+        boolean uploaded = false;
         try {
             u = userService.getById(userID);
+            if(documentRepository.existsByNameAndOwner(file.getOriginalFilename(), u))
+                throw new UniqueKeyViolationException("");
             d.setOwner(u);
             d.setName( file.getOriginalFilename());
             documentRepository.save(d); // Save to generate docID
 
+            // SET METADATA
             String mimeType = file.getContentType();
             dm = new DocumentMetadata(d);
             dm.setFileType(mimeType);
             dm.setFileSize(file.getSize());
-
-            BlockBlobClient blockBlobClient = getOrCreateAndGetContainerByOwner(u).getBlobClient(d.getId().toString()).getBlockBlobClient();
-
-            // upload file to azure blob storage
-            blockBlobClient.upload(new BufferedInputStream(file.getInputStream()), file.getSize(), true);
-            logger.log(Level.INFO, () -> String.format("File %s uploaded in blob '%s'",  file.getOriginalFilename(), blockBlobClient.getBlobName()));
-
-            d.setResourceUrl(blockBlobClient.getBlobUrl());
-
             Map<String, String> blobMetadata = new HashMap<>();
-
             blobMetadata.put(MetadataCategory.FILE_NAME.toString(),  file.getOriginalFilename());
             blobMetadata.put(MetadataCategory.FILE_TYPE.toString(), mimeType);
             blobMetadata.put(MetadataCategory.ID.toString(), d.getId().toString());
-            blockBlobClient.setMetadata(blobMetadata);
+
+            documentMetadataRepository.save(dm);
+
+            // upload file to azure blob storage
+            resourceUrl = uploadToBlob(u, d, file, blobMetadata);
+            d.setResourceUrl(resourceUrl);
+            d = documentRepository.save(d);
 
             success = true;
         }catch (ResourceNotFoundException e){
@@ -106,23 +107,66 @@ public class FileService {
         } catch (IOException e) {
             logger.severe(e.toString());
             documentRepository.delete(d);
-            throw new IOException();
+            throw e;
         } catch (Exception e){
             logger.severe(e.toString());
-            throw new Exception();
-        } finally {
-            if(!success) documentRepository.delete(d);
+            throw e;
+        }finally{
+            if(!success && resourceUrl!=null) deleteFromBlob(u, d);
         }
-        documentMetadataRepository.save(dm);
-        return documentRepository.save(d);
+
+        return d;
+    }
+
+    public void deleteDocument(String userID, Long docID) throws  ResourceNotFoundException, UnauthorizedUserException{
+        User u = userService.getById(userID);
+        Document d = documentService.getById(docID);
+
+        if(!d.getOwner().equals(u)){
+            logger.warning("User doesn't have permission to delete this document");
+            throw new UnauthorizedUserException();
+        }
+
+        deleteFromBlob(u, d);
+        documentRepository.delete(d);
+    }
+
+    public void deleteDocuments(String userID, List<Long> docsID) throws  ResourceNotFoundException, UnauthorizedUserException{
+        User u = userService.getById(userID);
+        List<Document> documents = new LinkedList<>();
+        for (Long docID: docsID) {
+            Document d = documentService.getById(docID);
+            if(!d.getOwner().equals(u)){
+                logger.warning("User doesn't have permission to delete this document");
+                throw new UnauthorizedUserException();
+            }
+            documents.add(d);
+        }
+        for (Document d: documents) {
+            deleteFromBlob(u, d);
+            documentRepository.delete(d);
+        }
+    }
+
+    private String uploadToBlob(User u, Document d, MultipartFile file, Map<String, String> metadata) throws IOException {
+        BlockBlobClient blockBlobClient = getOrCreateAndGetContainerByOwner(u).getBlobClient(d.getId().toString()).getBlockBlobClient();
+        blockBlobClient.upload(new BufferedInputStream(file.getInputStream()), file.getSize(), true);
+        logger.log(Level.INFO, String.format("File %s uploaded in blob '%s'",  file.getOriginalFilename(), blockBlobClient.getBlobName()));
+        blockBlobClient.setMetadata(metadata);
+        return blockBlobClient.getBlobUrl();
+    }
+
+    private void deleteFromBlob(User u, Document d){
+        BlockBlobClient blockBlobClient = getOrCreateAndGetContainerByOwner(u).getBlobClient(d.getId().toString()).getBlockBlobClient();
+        blockBlobClient.delete();
     }
     public void setMetadata(String userID, Long docID, String filename,
-                            String description, Set<String> tagsName)
+                            String description, List<String> tagsName)
             throws IllegalArgumentException, ResourceNotFoundException, UnauthorizedUserException {
         User u;
         Document d;
         DocumentMetadata dm;
-        List<Tag> tags = new LinkedList<>();
+        Set<Tag> tags = new HashSet<>();
         try {
             u = userService.getById(userID);
             d = documentService.getById(docID);
@@ -150,7 +194,7 @@ public class FileService {
             blobMetadata.put(MetadataCategory.DESCRIPTION.toString(), description);
         }
 
-        if(tagsName!=null){
+        if(tagsName!=null && !tagsName.isEmpty()){
             StringBuilder sb = new StringBuilder();
             Tag t;
             for (String tagName: tagsName) {
@@ -160,11 +204,16 @@ public class FileService {
                     t = new Tag(tagName);
                     tagRepository.save(t);
                 }
-                tags.add(t);
-                sb.append(tagName).append(":");
+                if(!tags.contains(t)){
+                    tags.add(t);
+                    sb.append(tagName).append(":");
+                }
             }
-            dm.setTags(tags);
+            dm.setTags(new LinkedList<>(tags));
             blobMetadata.put(MetadataCategory.TAGS.toString(), sb.toString());
+        }else{
+            dm.setTags(new LinkedList<>());
+            blobMetadata.remove(MetadataCategory.TAGS.toString());
         }
 
         blockBlobClient.setMetadata(blobMetadata);
@@ -302,6 +351,7 @@ public class FileService {
         }
 
         if(!d.getOwner().equals(owner)) throw new UnauthorizedUserException();
+        if(owner.equals(reader)) return;
 
         d.addReader(reader);
         documentRepository.save(d);
@@ -316,7 +366,9 @@ public class FileService {
         try {
             owner = userService.getById(ownerID);
             for (String readerID: readersID) {
-                readers.add(userService.getById(readerID));
+                User reader = userService.getById(readerID);
+                if(owner.equals(reader)) continue;
+                readers.add(reader);
             }
         
             d = documentService.getById(docID);

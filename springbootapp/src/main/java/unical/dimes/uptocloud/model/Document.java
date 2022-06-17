@@ -43,7 +43,7 @@ public class Document {
     private String resourceUrl;
 
     @NotNull
-    @ManyToOne
+    @ManyToOne()
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
@@ -57,7 +57,7 @@ public class Document {
     )
     private List<User> readers;
 
-    @OneToOne(mappedBy = "document")
+    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL)
     private DocumentMetadata metadata;
 
     public void addReader(User reader){
