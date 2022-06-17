@@ -1,6 +1,7 @@
 import 'package:admin/support/date_time_utils.dart';
 
 import 'document.dart';
+import 'dart:convert';
 
 class DocumentMetadata {
   int id;
@@ -9,6 +10,7 @@ class DocumentMetadata {
   DateTime uploadedAt;
   String fileType;
   double fileSize;
+  List<String>? tags;
 
   DocumentMetadata(
       {required this.id,
@@ -16,7 +18,9 @@ class DocumentMetadata {
          this.description,
         required this.uploadedAt,
         required this.fileType,
-      required this.fileSize});
+      required this.fileSize,
+        this.tags
+      });
 
   factory DocumentMetadata.fromJson(Map<String, dynamic> json) {
     return DocumentMetadata(
@@ -26,6 +30,9 @@ class DocumentMetadata {
       uploadedAt: DateTime.parse(json['uploadedAt']),
       fileType: json['fileType'],
       fileSize: json['fileSize'],
+      tags: json['tags'] == null ? null : List<String>.from(
+          json['tags'].map((tag) => tag['name']).toList()
+      )
     );
   }
 
@@ -36,6 +43,7 @@ class DocumentMetadata {
         'uploadedAt': uploadedAt,
         'fileType': fileType,
         'fileSize': fileSize,
+        'tags': tags == null ? null : jsonEncode(tags)
       };
 
   @override

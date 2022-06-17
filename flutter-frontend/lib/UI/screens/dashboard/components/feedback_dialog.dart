@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../behaviors/app_localizations.dart';
 import '../../../constants.dart';
+import '../../../responsive.dart';
 
 class FeedbackDialog{
   FeedbackDialog({Key? key, required this.type, required this.context, required this.title, this.message});
@@ -13,12 +14,15 @@ class FeedbackDialog{
   String title;
   String? message;
 
-  show(){
-    CoolAlert.show(
+  Future show(){
+    return CoolAlert.show(
         context: context,
         type: type,
         title: title,
         text: message == null ? "": message,
+        width: Responsive.isMobile(context) ? MediaQuery.of(context).size.width*.8 :
+        Responsive.isTablet(context) ? MediaQuery.of(context).size.width*.6 :
+        MediaQuery.of(context).size.width*.2,
         backgroundColor: bgColor,
         confirmBtnColor: primaryColor,
         onConfirmBtnTap: () => Navigator.pop(context));

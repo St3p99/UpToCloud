@@ -1,9 +1,13 @@
 import 'dart:convert';
 
 import 'package:admin/UI/responsive.dart';
+import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import '../../../../api/api_controller.dart';
 import '../../../../models/document.dart';
 import '../../../constants.dart';
+import 'feedback_dialog.dart';
 
 class PopupEditMetadata extends StatefulWidget {
   PopupEditMetadata({
@@ -24,8 +28,9 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
 
   String get _inputTags => _tagsEditingController.text.trim();
 
-  late String _description;
-  late List<String> _tags = List.empty(growable: true);
+  late String _filename;
+  String? _description;
+  late List<String> _tags;
   late List<String> _suggestions = ["test1", "non", "ho", "fantasia"];
   late FocusNode _focusNode;
 
@@ -35,6 +40,15 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
 
   @override
   void initState() {
+    setState((){
+      _filename = widget.file.name;
+      if(widget.file.metadata.description != null)
+        _description = widget.file.metadata.description;
+      if(widget.file.metadata.tags != null)
+        _tags = widget.file.metadata.tags!;
+      else _tags = List.empty();
+    });
+
     super.initState();
     _focusNode = FocusNode();
     _tagsEditingController.addListener(() => refreshState(() {}));
@@ -47,7 +61,32 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
     _tagsEditingController.dispose();
   }
 
-  void _pushData() {}
+  void _pushData() async{
+    _formKey.currentState!.save();
+    Response? response = await new ApiController().setMetadata(widget.file.id, _filename, _description, _tags);
+    switch (response!.statusCode) {
+      case 200:
+        {
+          FeedbackDialog(
+              type: CoolAlertType.success,
+              context: context,
+              title: "SUCCESS",
+              message: "")
+              .show().whenComplete(() => Navigator.pop(context));
+        }
+        break;
+      default:
+        {
+          FeedbackDialog(
+              type: CoolAlertType.error,
+              context: context,
+              title: "UNKNOWN ERROR",
+              message: "")
+              .show();
+        }
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +113,26 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
                       Text(
                         "\"" + widget.file.name + "\" | Edit Metadata",
                         style: Theme.of(context).textTheme.headline6,
+                      ),
+                      Padding(
+                          padding:
+                          EdgeInsets.symmetric(vertical: defaultPadding)),
+                      TextFormField(
+                        keyboardType: TextInputType.name,
+                        initialValue: widget.file.name,
+                        decoration: InputDecoration(
+                          label: Text("Name"),
+                          fillColor: secondaryColor,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius:
+                            const BorderRadius.all(Radius.circular(10)),
+                          ),
+                        ),
+                        onSaved: (value) => _filename = value!,
+                        onFieldSubmitted: (value) {
+                          _pushData();
+                        },
                       ),
                       Padding(
                           padding:
@@ -111,22 +170,7 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
           ),
         ),
         actions: [
-          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-            // ButtonTheme(
-            //   minWidth: 25.0,
-            //   height: 25.0,
-            //   child: ElevatedButton(
-            //     style: TextButton.styleFrom(
-            //       padding: EdgeInsets.symmetric(
-            //         horizontal: defaultPadding * 1.5,
-            //         vertical:
-            //             defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
-            //       ),
-            //     ),
-            //     onPressed: () {},
-            //     child: Text("Close"),
-            //   ),
-            // ),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             ButtonTheme(
               minWidth: 25.0,
               height: 25.0,
@@ -138,7 +182,22 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
                         defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () { Navigator.of(context).pop();},
+                child: Text("Close"),
+              ),
+            ),
+            ButtonTheme(
+              minWidth: 25.0,
+              height: 25.0,
+              child: ElevatedButton(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: defaultPadding * 1.5,
+                    vertical:
+                        defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
+                  ),
+                ),
+                onPressed: () {_pushData();},
                 child: Text("Save"),
               ),
             ),

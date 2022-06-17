@@ -9,6 +9,7 @@ import 'package:admin/UI/screens/dashboard/components/shared_file_datatable_sour
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import '../../../../models/document.dart';
+import '../../../../support/constants.dart';
 import '../../../constants.dart';
 import '../../../responsive.dart';
 import 'my_abstract_datatable_source.dart';
@@ -40,7 +41,6 @@ class _FilesListState extends State<FilesList> {
   late int _sortColumnIndex;
   late MyAbstractDataTableSource datasource;
   String? _selectedOption = null;
-
 
   @override
   initState() {
@@ -114,53 +114,53 @@ class _FilesListState extends State<FilesList> {
 
   Widget _buildContent(BuildContext context, List<Document> files) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+        Text(
+          widget.title,
+          style: Theme.of(context).textTheme.subtitle1,
+        ),
+      ]),
       Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Text(
-              widget.title,
-              style: Theme.of(context).textTheme.subtitle1,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          if (_selectedFiles.isNotEmpty) ...[
+            optionButtons(),
+          ],
+          IconButton(
+            tooltip: "Refresh",
+            icon: Icon(
+              Icons.refresh,
+              color: Colors.white,
             ),
-
-    ]),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (_selectedFiles.isNotEmpty) ...[
-                  optionButtons(),
-                  Padding(padding: EdgeInsets.only(right: defaultPadding)),
-                ],
-                IconButton(
-                  tooltip: "Refresh",
-                  icon: Icon(
-                    Icons.refresh,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    fetch();
-                  },
-                ),
-            Padding(padding: EdgeInsets.only(right: defaultPadding)),
+            onPressed: () {
+              fetch();
+            },
+          ),
+          Padding(padding: EdgeInsets.only(right: defaultPadding)),
+          if (widget.isOwner) ...[
             ElevatedButton.icon(
               style: TextButton.styleFrom(
                 padding: EdgeInsets.symmetric(
                   horizontal: defaultPadding * 1.5,
-                  vertical: defaultPadding /
-                      (Responsive.isMobile(context) ? 2 : 1),
+                  vertical:
+                      defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
                 ),
               ),
               onPressed: () {
                 showDialog(
-                    context: context,
-                    builder: (context) => PopupUpload());
+                    context: context, builder: (context) => PopupUpload()).whenComplete(() => fetch());
               },
               icon: Icon(Icons.add),
               label: Text("Add New"),
             ),
-          ],
-        ),
+          ]// visible only if is owner
+        ],
+      ),
       files.isEmpty
-          ? Text('No files', style: Theme.of(context).textTheme.labelLarge,)
+          ? Text(
+              'No files',
+              style: Theme.of(context).textTheme.labelLarge,
+            )
           : _buildTable(),
     ]);
   }
@@ -170,23 +170,23 @@ class _FilesListState extends State<FilesList> {
       panEnabled: false,
       scaleEnabled: false,
       child: Container(
-          width: MediaQuery.of(context).size.width,
-          child: Theme(
-            data: Theme.of(context).copyWith(
-                cardColor: secondaryColor,
-                selectedRowColor: primaryColor,
-                checkboxTheme: CheckboxThemeData(
-                  side: MaterialStateBorderSide.resolveWith(
-                      (_) => const BorderSide(width: 1, color: Colors.white)),
-                  fillColor: MaterialStateProperty.all(primaryColor),
-                  checkColor: MaterialStateProperty.all(Colors.white),
-                ),
-                textTheme: Theme.of(context)
-                    .textTheme
-                    .apply(displayColor: Colors.white, bodyColor: Colors.white)),
-            child: PaginatedDataTable(
-            // rowsPerPage: DEFAULT_PAGE_SIZE,
-            showCheckboxColumn: widget.isOwner,
+        width: MediaQuery.of(context).size.width,
+        child: Theme(
+          data: Theme.of(context).copyWith(
+              cardColor: secondaryColor,
+              selectedRowColor: primaryColor,
+              checkboxTheme: CheckboxThemeData(
+                side: MaterialStateBorderSide.resolveWith(
+                    (_) => const BorderSide(width: 1, color: Colors.white)),
+                fillColor: MaterialStateProperty.all(primaryColor),
+                checkColor: MaterialStateProperty.all(Colors.white),
+              ),
+              textTheme: Theme.of(context)
+                  .textTheme
+                  .apply(displayColor: Colors.white, bodyColor: Colors.white)),
+          child: PaginatedDataTable(
+            rowsPerPage: DEFAULT_PAGE_SIZE,
+            showCheckboxColumn: _selectedFiles.length > 2,
             columnSpacing: defaultPadding,
             columns: [
               DataColumn(
@@ -194,7 +194,7 @@ class _FilesListState extends State<FilesList> {
                   onSort: (columnIndex, sortAscending) =>
                       datasource.sort(columnIndex, sortAscending)),
               DataColumn(
-                  label: Text("Date uploaded"),
+                  label: Text("Date uploaded (UTC)"),
                   onSort: (columnIndex, sortAscending) =>
                       datasource.sort(columnIndex, sortAscending)),
               if (!widget.isOwner) ...[
@@ -211,78 +211,66 @@ class _FilesListState extends State<FilesList> {
             source: datasource,
             sortColumnIndex: _sortColumnIndex,
             sortAscending: _sortAsc,
-            ),
+          ),
         ),
       ),
     );
   }
 
-
   Widget optionMenu() {
     return DropdownButton<String>(
       value: _selectedOption,
-          icon: Icon(
-            Icons.more_horiz,
-            color: Colors.white,
-          ),
-          items: [
-            if (widget.isOwner && _selectedFiles.isNotEmpty) ...[
-              DropdownMenuItem(
-                  child: shareMenuButton(),
-                value: "share"
-              ),
-              DropdownMenuItem(
-                child: deleteMenuButton(),
-                  value: "delete"
-              ),
-            ],
-            if (_selectedFiles.length == 1) ...[
-              DropdownMenuItem(
-                child: downloadMenuButton(),
-                  value: "download"
-              ),
-              if (widget.isOwner) ...[
-                DropdownMenuItem(child: metadataMenuButton(),
-                    value: "metadata"),
-              ],
-              DropdownMenuItem(child: moreInfoMenuButton(), value: "moreInfo"),
-            ],
-              ],
-      onChanged: (value) {  _selectedOption = value; },
+      icon: Icon(
+        Icons.more_horiz,
+        color: Colors.white,
+      ),
+      items: [
+        if (widget.isOwner && _selectedFiles.isNotEmpty) ...[
+          DropdownMenuItem(child: shareMenuButton(), value: "share"),
+          DropdownMenuItem(child: deleteMenuButton(), value: "delete"),
+        ],
+        if (_selectedFiles.length == 1) ...[
+          DropdownMenuItem(child: downloadMenuButton(), value: "download"),
+          if (widget.isOwner) ...[
+            DropdownMenuItem(child: metadataMenuButton(), value: "metadata"),
+          ],
+          DropdownMenuItem(child: moreInfoMenuButton(), value: "moreInfo"),
+        ],
+      ],
+      onChanged: (value) {
+        _selectedOption = value;
+      },
     );
   }
 
   Widget optionButtons() {
     return Responsive.isMobile(context)
         ? optionMenu()
-        : Container(
-            margin: EdgeInsets.only(left: defaultPadding),
-            padding: EdgeInsets.symmetric(
-              horizontal: defaultPadding,
-              vertical: defaultPadding / 2,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (widget.isOwner && _selectedFiles.isNotEmpty) ...[
-                  deleteButton()
-                ],
-                if (_selectedFiles.length == 1) ...[
-                  if (widget.isOwner) ...[
-                    shareButton(),
-                    metadataButton(),
-                  ],
-                  moreInfoButton(),
-                ],
+        : Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            if (widget.isOwner && _selectedFiles.isNotEmpty) ...[
+              deleteButton()
+            ],
+            if (_selectedFiles.length == 1) ...[
+              if (widget.isOwner) ...[
+                shareButton(),
+                metadataButton(),
               ],
-            ),
-          );
+              moreInfoButton(),
+            ],
+          ],
+        );
   }
 
   Widget shareButton() {
     return IconButton(
       tooltip: "Share file",
-      icon: SvgPicture.asset("assets/icons/add_user.svg", color: Colors.white, height: 20,),
+      icon: SvgPicture.asset(
+        "assets/icons/add_user.svg",
+        color: Colors.white,
+        height: 20,
+      ),
       onPressed: () {
         showDialog(
             context: context,
@@ -295,7 +283,11 @@ class _FilesListState extends State<FilesList> {
   Widget deleteButton() {
     return IconButton(
       tooltip: _selectedFiles.length == 1 ? "Delete file" : "Delete files",
-      icon: SvgPicture.asset("assets/icons/delete.svg", color: Colors.white, height: 20,),
+      icon: SvgPicture.asset(
+        "assets/icons/delete.svg",
+        color: Colors.white,
+        height: 20,
+      ),
       onPressed: () {},
     );
   }
@@ -303,7 +295,11 @@ class _FilesListState extends State<FilesList> {
   Widget downloadButton() {
     return IconButton(
       tooltip: "Download file",
-      icon: SvgPicture.asset("assets/icons/download.svg", color: Colors.white, height: 20,),
+      icon: SvgPicture.asset(
+        "assets/icons/download.svg",
+        color: Colors.white,
+        height: 20,
+      ),
       onPressed: () {},
     );
   }
@@ -311,13 +307,16 @@ class _FilesListState extends State<FilesList> {
   Widget metadataButton() {
     return IconButton(
       tooltip: "Edit metadata",
-      icon: SvgPicture.asset("assets/icons/tags.svg",
-        color: Colors.white, height: 20,),
+      icon: SvgPicture.asset(
+        "assets/icons/tags.svg",
+        color: Colors.white,
+        height: 20,
+      ),
       onPressed: () {
         showDialog(
             context: context,
-            builder: (context) => PopupEditMetadata(
-                file: datasource.getSelectedFile()));
+            builder: (context) =>
+                PopupEditMetadata(file: datasource.getSelectedFile()));
       },
     );
   }
@@ -325,8 +324,11 @@ class _FilesListState extends State<FilesList> {
   Widget moreInfoButton() {
     return IconButton(
       tooltip: "More info",
-      icon: SvgPicture.asset("assets/icons/info.svg",
-        color: Colors.white, height: 20,),
+      icon: SvgPicture.asset(
+        "assets/icons/info.svg",
+        color: Colors.white,
+        height: 20,
+      ),
       onPressed: () {},
     );
   }
@@ -335,8 +337,11 @@ class _FilesListState extends State<FilesList> {
   Widget moreInfoMenuButton() {
     return TextButton.icon(
       label: Text("More info", style: TextStyle(color: Colors.white)),
-      icon: SvgPicture.asset("assets/icons/info.svg",
-        color: Colors.white, height: 20,),
+      icon: SvgPicture.asset(
+        "assets/icons/info.svg",
+        color: Colors.white,
+        height: 20,
+      ),
       onPressed: () {},
     );
   }
@@ -344,8 +349,11 @@ class _FilesListState extends State<FilesList> {
   Widget shareMenuButton() {
     return TextButton.icon(
       label: Text("Share file", style: TextStyle(color: Colors.white)),
-      icon: SvgPicture.asset("assets/icons/add_user.svg",
-          color: Colors.white, height: 20,),
+      icon: SvgPicture.asset(
+        "assets/icons/add_user.svg",
+        color: Colors.white,
+        height: 20,
+      ),
       onPressed: () {
         showDialog(
             context: context,
@@ -357,9 +365,13 @@ class _FilesListState extends State<FilesList> {
 
   Widget deleteMenuButton() {
     return TextButton.icon(
-      label: Text(_selectedFiles.length == 1 ? "Delete file" : "Delete files", style: TextStyle(color: Colors.white)),
-      icon: SvgPicture.asset("assets/icons/delete.svg",
-        color: Colors.white, height: 20,),
+      label: Text(_selectedFiles.length == 1 ? "Delete file" : "Delete files",
+          style: TextStyle(color: Colors.white)),
+      icon: SvgPicture.asset(
+        "assets/icons/delete.svg",
+        color: Colors.white,
+        height: 20,
+      ),
       onPressed: () {},
     );
   }
@@ -367,8 +379,11 @@ class _FilesListState extends State<FilesList> {
   Widget downloadMenuButton() {
     return TextButton.icon(
       label: Text("Download file", style: TextStyle(color: Colors.white)),
-      icon: SvgPicture.asset("assets/icons/download.svg",
-        color: Colors.white, height: 20,),
+      icon: SvgPicture.asset(
+        "assets/icons/download.svg",
+        color: Colors.white,
+        height: 20,
+      ),
       onPressed: () {},
     );
   }
@@ -376,13 +391,16 @@ class _FilesListState extends State<FilesList> {
   Widget metadataMenuButton() {
     return TextButton.icon(
       label: Text("Edit metadata", style: TextStyle(color: Colors.white)),
-      icon: SvgPicture.asset("assets/icons/tags.svg",
-        color: Colors.white, height: 20,),
+      icon: SvgPicture.asset(
+        "assets/icons/tags.svg",
+        color: Colors.white,
+        height: 20,
+      ),
       onPressed: () {
         showDialog(
             context: context,
-            builder: (context) => PopupEditMetadata(
-                file: datasource.getSelectedFile()));
+            builder: (context) =>
+                PopupEditMetadata(file: datasource.getSelectedFile()));
       },
     );
   }

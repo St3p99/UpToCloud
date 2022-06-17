@@ -22,9 +22,8 @@ const String REQUEST_LOGOUT =
 
 // - SEARCH CONTROLLER
 const String REQUEST_LOAD_RECENT_FILES = "/api/search/recent";
-const String REQUEST_LOAD_RECENT_FILES_READ_ONLY =
-    "/api/search/recent-read-only";
-const int DEFAULT_PAGE_SIZE = 10;
+const String REQUEST_LOAD_RECENT_FILES_READ_ONLY = "/api/search/recent-read-only";
+const int DEFAULT_PAGE_SIZE = 5;
 
 // - USER CONTROLLER
 const String REQUEST_ADD_USER = "api/users/new";
@@ -34,6 +33,7 @@ const String REQUEST_SEARCH_USER_BY_EMAIL_CONTAINS = "/api/users/byEmail-contain
 const String REQUEST_NEW_USER = "/api/users/new";
 
 // FILE CONTROLLER
+const String REQUEST_SET_METADATA = "/api/files/set_metadata";
 const String REQUEST_ADD_READERS = "/api/files/add-readers";
 const String REQUEST_REMOVE_READERS = "/api/files/remove-readers";
 const String REQUEST_SHARE_SUGGESTIONS = "/api/files/share-suggestions";

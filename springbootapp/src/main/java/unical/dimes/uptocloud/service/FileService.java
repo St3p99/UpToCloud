@@ -116,7 +116,7 @@ public class FileService {
         documentMetadataRepository.save(dm);
         return documentRepository.save(d);
     }
-    public Document setMetadata(String userID, Long docID, String filename,
+    public void setMetadata(String userID, Long docID, String filename,
                             String description, Set<String> tagsName)
             throws IllegalArgumentException, ResourceNotFoundException, UnauthorizedUserException {
         User u;
@@ -150,7 +150,7 @@ public class FileService {
             blobMetadata.put(MetadataCategory.DESCRIPTION.toString(), description);
         }
 
-        if(tagsName!=null && !tagsName.isEmpty()){
+        if(tagsName!=null){
             StringBuilder sb = new StringBuilder();
             Tag t;
             for (String tagName: tagsName) {
@@ -169,7 +169,7 @@ public class FileService {
 
         blockBlobClient.setMetadata(blobMetadata);
         documentMetadataRepository.save(dm);
-        return documentRepository.save(d);
+        documentRepository.save(d);
     }
 
     public DocumentMetadata getMetadata(String userID, Long docID)

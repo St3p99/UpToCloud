@@ -29,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   late LoginResult _loginResult;
   late String _email;
   late String _password;
+  bool _obscureText = true;
   final _formKey = GlobalKey<FormState>();
   UserProvider userProvider = new UserProvider();
 
@@ -104,7 +105,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: defaultPadding,
                           ),
                           TextFormField(
+                            obscureText: _obscureText,
                             decoration: InputDecoration(
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  // Based on passwordVisible state choose the icon
+                                  _obscureText
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                                  color: primaryColor,
+                                  ),
+                                onPressed: () {
+                                  setState(() {
+                                      _obscureText = !_obscureText;
+                                  });
+                                },
+                                ),
                               label: Text("password"),
                               hintText: "Please write your password",
                               fillColor: secondaryColor,
@@ -120,34 +136,32 @@ class _LoginScreenState extends State<LoginScreen> {
                               // _password = value;
                               _login();
                             },
-                            obscureText: true, //TODO: button obscureText
+                            
                           ),
                         ]),
                       ),
                       const SizedBox(height: defaultPadding),
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: Row(
-                          children: [
-                            MaterialButton(
-                              child: Text(
-                                "Forget password? I'm sorry!",
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                              onPressed: () {},
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          MaterialButton(
+                            child: Text(
+                              "Forget password? I'm sorry!",
+                              style: Theme.of(context).textTheme.labelSmall,
                             ),
-                            Padding(padding: EdgeInsets.only(right: defaultPadding/2)),
-                            MaterialButton(
-                              child: Text(
-                                "Signup",
-                                style: Theme.of(context).textTheme.labelMedium,
-                              ),
-                              onPressed: () {
-                                Navigator.pushNamed(context, SignupScreen.routeName);
-                              },
+                            onPressed: () {},
+                          ),
+                          Padding(padding: EdgeInsets.only(right: defaultPadding/2)),
+                          MaterialButton(
+                            child: Text(
+                              "Signup",
+                              style: Theme.of(context).textTheme.labelMedium,
                             ),
-                          ],
-                        ),
+                            onPressed: () {
+                              Navigator.pushNamed(context, SignupScreen.routeName);
+                            },
+                          ),
+                        ],
                       ),
                       const SizedBox(height: defaultPadding),
                       GestureDetector(

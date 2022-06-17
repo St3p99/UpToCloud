@@ -25,7 +25,6 @@ class PopupUpload extends StatefulWidget {
     Key? key,
   }) : super(key: key);
 
-
   @override
   _PopupUploadState createState() => _PopupUploadState();
 }
@@ -66,38 +65,24 @@ class _PopupUploadState extends State<PopupUpload> {
           height: Responsive.uploadDialogHeight(context),
           child: SingleChildScrollView(
               child: Center(
-                child:Column(
-                  children: [
-                    // here DropZoneWidget is statefull widget file
-                    Container(
-                      height: 300,
-                      child: DropZoneWidget(
-                        onDroppedFile: (file) => setState(()=> this.file = file) ,
-                      ),
-                    ),
-                    Padding(padding: EdgeInsets.only(bottom: defaultPadding),),
-                    DroppedFileWidget(file: file)
-                  ],
-                )
-              )),
+                  child: Column(
+            children: [
+              // here DropZoneWidget is statefull widget file
+              Container(
+                height: 300,
+                child: DropZoneWidget(
+                  onDroppedFile: (file) => setState(() => this.file = file),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: defaultPadding),
+              ),
+              DroppedFileWidget(file: file)
+            ],
+          ))),
         ),
         actions: [
           Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-            // ButtonTheme(
-            //   minWidth: 25.0,
-            //   height: 25.0,
-            //   child: ElevatedButton(
-            //     style: TextButton.styleFrom(
-            //       padding: EdgeInsets.symmetric(
-            //         horizontal: defaultPadding * 1.5,
-            //         vertical:
-            //         defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
-            //       ),
-            //     ),
-            //     onPressed: () {},
-            //     child: Text("Close"),
-            //   ),
-            // ),
             ButtonTheme(
               minWidth: 25.0,
               height: 25.0,
@@ -109,12 +94,28 @@ class _PopupUploadState extends State<PopupUpload> {
                     defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
                   ),
                 ),
-                onPressed: () {
-                  _upload();
-                },
-                child: Text("Confirm"),
+                onPressed: () {Navigator.of(context).pop();},
+                child: Text("Close"),
               ),
             ),
+            if (file != null)
+              ButtonTheme(
+                minWidth: 25.0,
+                height: 25.0,
+                child: ElevatedButton(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: defaultPadding * 1.5,
+                      vertical: defaultPadding /
+                          (Responsive.isMobile(context) ? 2 : 1),
+                    ),
+                  ),
+                  onPressed: () {
+                    _upload();
+                  },
+                  child: Text("Confirm"),
+                ),
+              ),
           ])
         ],
       ),
@@ -124,20 +125,26 @@ class _PopupUploadState extends State<PopupUpload> {
   Future<void> _upload() async {
     StreamedResponse? response = await new ApiController().uploadFile(file!);
     switch (response!.statusCode) {
-      case 200:{
-        FeedbackDialog(
-            type: CoolAlertType.success,
-            context:context, title:"SUCCESS", message:"").show();
-        Navigator.pop(context);
-      }break;
-      default:{
-        FeedbackDialog(
-            type: CoolAlertType.error,
-            context:context, title:"UNKNOWN ERROR", message:"").show();
-      }
+      case 200:
+        {
+          FeedbackDialog(
+              type: CoolAlertType.success,
+              context: context,
+              title: "SUCCESS",
+              message: "")
+              .show().whenComplete(() => Navigator.pop(context));
+        }
+        break;
+      default:
+        {
+          FeedbackDialog(
+                  type: CoolAlertType.error,
+                  context: context,
+                  title: "UNKNOWN ERROR",
+                  message: "")
+              .show();
+        }
         break;
     }
   }
-
-
 }

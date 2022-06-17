@@ -93,7 +93,7 @@ class ApiController {
       return User.fromJson(jsonDecode(response.body));
     } catch (e) {
       print('statusCode: '+ response!.statusCode.toString());
-      print("loadUser: " + e.toString());
+      print("loadUserLoggedData: " + e.toString());
     }
   }
 
@@ -109,7 +109,7 @@ class ApiController {
             .toList());
     } catch (e) {
       print('statusCode: '+ response!.statusCode.toString());
-      print("loadUser: " + e.toString());
+      print("loadRecentFilesOwned: " + e.toString());
     }
     return null;
   }
@@ -126,7 +126,7 @@ class ApiController {
           .toList());
     } catch (e) {
       print('statusCode: '+ response!.statusCode.toString());
-      print("loadUser: " + e.toString());
+      print("loadRecentFilesReadOnly: " + e.toString());
     }
     return null;
   }
@@ -180,6 +180,23 @@ Future<User?> searchUserByEmail(String email) async {
     return response;
   }
 
+  Future<Response?> setMetadata(int docID, String filename, String? description, List<String>? tags) async{
+    try {
+      Map<String, dynamic> params = Map();
+      params["filename"] = filename;
+      if(description != null) params["description"] = description;
+      else params["description"] = description;
+      params["tags"] = tags;
+      Response response = await _restManager.makePostRequest(
+          ADDRESS_STORE_SERVER, REQUEST_SET_METADATA + "/" + docID.toString(), null, value:params);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      return response;
+    } catch (e) {
+      print("addReaders exception: " + e.toString());
+      return null;
+    }
+  }
+
   Future<Response?> addReaders(Document document, List<User> user) async{
     try {
       Map<String, dynamic> params = Map();
@@ -218,10 +235,10 @@ Future<User?> searchUserByEmail(String email) async {
           ADDRESS_STORE_SERVER, REQUEST_GET_READERS_BY_DOC, params);
       if (response.statusCode == HttpStatus.notFound) return null;
       if (response.statusCode == HttpStatus.noContent) return List.empty(growable: false);
-      return List<User>.from(json
-          .decode(response.body)
+      return List<User>.from(json.decode(response.body)
           .map((i) => User.fromJson(i))
-          .toList());
+          .toList()
+      );
     } catch (e) {
       print("getReadersByDoc exception: " + e.toString());
       return null;

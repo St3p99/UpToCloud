@@ -47,10 +47,10 @@ class SharedFileDataTableSource extends MyAbstractDataTableSource {
         ),
         DataCell(Container(
             constraints: BoxConstraints(minWidth: 200),
-            child: Text(file.metadata.uploadedAt.toString()))),
+            child: Text(file.metadata.uploadedAt.toString().split(".").first))),
         DataCell(Container(
             constraints: BoxConstraints(minWidth: 200),
-            child: Text(file.owner.username))),
+            child: Text(file.owner.email+" ("+file.owner.username+")"))),
         DataCell(Container(
             constraints: BoxConstraints(minWidth: 200),
             child: Text(file.getFileSize()))),

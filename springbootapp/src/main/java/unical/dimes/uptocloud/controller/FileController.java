@@ -85,15 +85,12 @@ public class FileController {
     @PostMapping(value = "/set_metadata/{doc_id}", consumes = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> setMetadata(@AuthenticationPrincipal Jwt principal,
                                          @PathVariable("doc_id") Long docID,
-                                         @RequestParam(value = "filename", required = false) String filename,
-                                         @RequestParam(value = "description", required = false) String description,
-                                         @RequestParam(value = "tags", required = false) Set<String> tags) {
+                                         @RequestParam("filename") String filename,
+                                         @RequestParam("description") String description,
+                                         @RequestParam("tags") Set<String> tags) {
         try {
-            return ResponseEntity.status(200).body(
-                    fileService.setMetadata(
-                            principal.getSubject(), docID, filename, description, tags
-                    )
-            );
+            fileService.setMetadata(principal.getSubject(), docID, filename, description, tags);
+            return ResponseEntity.status(200).build();
         } catch (UnauthorizedUserException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User must be the owner of the specified document");
         } catch (ResourceNotFoundException e) {

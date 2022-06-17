@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:admin/UI/screens/dashboard/components/readers_datatable_source.dart';
 import 'package:admin/api/api_controller.dart';
 import 'package:admin/models/document.dart';
+import 'package:admin/support/constants.dart';
 import 'package:cool_alert/cool_alert.dart';
 
 import 'package:flutter/material.dart';
@@ -112,8 +113,7 @@ class _ReadersListState extends State<ReadersList> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           if (_selectedUsers.isNotEmpty) ...[
-            optionButtons(),
-            Padding(padding: EdgeInsets.only(right: defaultPadding)),
+            deleteButton()
           ],
           IconButton(
             tooltip: "Refresh",
@@ -153,8 +153,8 @@ class _ReadersListState extends State<ReadersList> {
                   .textTheme
                   .apply(displayColor: Colors.white, bodyColor: Colors.white)),
           child: PaginatedDataTable(
-            // rowsPerPage: DEFAULT_PAGE_SIZE,
-            showCheckboxColumn: true,
+            showCheckboxColumn: _selectedUsers.length > 2,
+            rowsPerPage: DEFAULT_PAGE_SIZE,
             columnSpacing: defaultPadding,
             columns: [
               DataColumn(
@@ -171,22 +171,6 @@ class _ReadersListState extends State<ReadersList> {
     );
   }
 
-
-  Widget optionButtons() {
-    return Container(
-      margin: EdgeInsets.only(left: defaultPadding),
-      padding: EdgeInsets.symmetric(
-        horizontal: defaultPadding,
-        vertical: defaultPadding / 2,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          if (_selectedUsers.isNotEmpty)deleteButton()
-        ],
-      ),
-    );
-  }
 
 
   Widget deleteButton() {

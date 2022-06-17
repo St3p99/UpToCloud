@@ -47,7 +47,7 @@ class FileDataTableSource extends MyAbstractDataTableSource{
         ),
         DataCell(Container(
             constraints: BoxConstraints(minWidth: 200),
-            child: Text(file.metadata.uploadedAt.toString()))),
+            child: Text(file.metadata.uploadedAt.toString().split(".").first))),
         DataCell(Container(
             constraints: BoxConstraints(minWidth: 200),
             child: Text(file.getFileSize()))),

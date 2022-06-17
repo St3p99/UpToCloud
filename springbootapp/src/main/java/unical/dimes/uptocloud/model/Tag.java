@@ -23,6 +23,7 @@ import java.util.List;
         schema = "public"
 )
 public class Tag {
+    @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

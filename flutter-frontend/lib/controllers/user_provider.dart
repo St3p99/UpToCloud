@@ -130,6 +130,7 @@ class UserProvider with ChangeNotifier{
       _persistentStorageManager.remove('token');
       _currentUser = null;
       _loginStatus = LoginStatus.Unauthenticated;
+      notifyListeners();
       return true;
     } catch (e) {
       return false;

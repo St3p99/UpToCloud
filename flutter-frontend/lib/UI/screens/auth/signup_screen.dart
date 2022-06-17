@@ -232,16 +232,12 @@ class _SignupScreenState extends State<SignupScreen> {
             context:context, title:"UNKNOWN ERROR").show();
 
       if(response!.statusCode == HttpStatus.created){
-        CoolAlert.show(
-            context: context,
+        FeedbackDialog(
             type: CoolAlertType.success,
+            context: context,
             title: "SUCCESS",
-            backgroundColor: bgColor,
-            confirmBtnColor: primaryColor,
-            onConfirmBtnTap: (){
-              Navigator.pop(context);
-              Navigator.pop(context); // BACK TO LOGIN
-            });
+            message: "")
+            .show().whenComplete(() => Navigator.pop(context));
 
       }
       else if(response!.statusCode == HttpStatus.conflict){

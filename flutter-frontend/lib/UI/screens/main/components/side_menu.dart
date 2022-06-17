@@ -1,4 +1,5 @@
 
+import 'package:admin/controllers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -45,6 +46,13 @@ class SideMenu extends StatelessWidget {
             title: "Settings",
             svgSrc: "assets/icons/menu_setting.svg",
             press: () {
+            },
+          ),
+          DrawerListTile(
+            title: "Logout",
+            svgSrc: "assets/icons/logout.svg",
+            press: () {
+              new UserProvider().logout();
             },
           ),
         ],

@@ -78,7 +78,8 @@ class _PopupShareState extends State<PopupShare> {
                   context: context,
                   title: "SUCCESS",
                   message: "")
-              .show();
+              .show().whenComplete(() => Navigator.pop(context));
+
         }
         break;
       default:
@@ -139,85 +140,7 @@ class _PopupShareState extends State<PopupShare> {
                             ),
                           ] else
                             SizedBox(),
-                          TypeAheadFormField(
-                            validator: (value) => _validateEmail(value!),
-                            textFieldConfiguration: TextFieldConfiguration(
-                              onChanged: (String value) async {
-                                if (_getSuggestions(value).isNotEmpty) return;
-                                if (_validateEmail(value) == null) {
-                                  User? user = await _getUser(value);
-                                  if (user != null) _suggestions.add(user);
-                                }
-                              },
-                              onSubmitted: (String value) async {
-                                if (_formKey.currentState!.validate() &&
-                                    _suggestions.isNotEmpty) {
-                                  _addUser(_getSuggestions(value).first);
-                                  _typeAheadController.clear();
-                                }
-                              },
-                              controller: _typeAheadController,
-                              focusNode: _focusNode,
-                              autofocus: true,
-                              decoration: InputDecoration(
-                                labelText: 'Add users',
-                                fillColor: secondaryColor,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10)),
-                                ),
-                              ),
-                            ),
-                            suggestionsCallback: (pattern) async {
-                              return _getSuggestions(pattern);
-                            },
-                            suggestionsBoxDecoration: SuggestionsBoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(10)),
-                                shadowColor: Colors.white70,
-                                constraints: BoxConstraints(
-                                    maxHeight:
-                                        Responsive.shareDialogHeight(context) *
-                                            5 /
-                                            4)),
-                            noItemsFoundBuilder: (context) {
-                              return Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Text(
-                                  'No Items Found!',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: Theme.of(context).disabledColor,
-                                      fontSize: Theme.of(context)
-                                          .textTheme
-                                          .subtitle1!
-                                          .fontSize),
-                                ),
-                              );
-                            },
-                            itemBuilder: (context, User suggestion) {
-                              return ListTile(
-                                leading: SvgPicture.asset(
-                                  "icons/menu_profile.svg",
-                                  color: Colors.white,
-                                  height: 20,
-                                ),
-                                title: Text(suggestion.username.capitalize),
-                                subtitle: Text(
-                                  suggestion.email.toLowerCase(),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .subtitle1!
-                                      .copyWith(color: Colors.white54),
-                                ),
-                              );
-                            },
-                            onSuggestionSelected: (User suggestion) {
-                              _addUser(suggestion);
-                              _typeAheadController.clear();
-                            },
-                          ),
+                          _tagsFormField(),
                           Padding(
                               padding: EdgeInsets.only(bottom: defaultPadding)),
                           Row(
@@ -272,6 +195,88 @@ class _PopupShareState extends State<PopupShare> {
     );
   }
 
+  _tagsFormField(){
+    return TypeAheadFormField(
+      validator: (value) => _validateEmail(value!),
+      textFieldConfiguration: TextFieldConfiguration(
+        onChanged: (String value) async {
+          if (_getSuggestions(value).isNotEmpty) return;
+          if (_validateEmail(value) == null) {
+            User? user = await _getUser(value);
+            if (user != null) _suggestions.add(user);
+          }
+        },
+        onSubmitted: (String value) async {
+          if (_formKey.currentState!.validate() &&
+              _suggestions.isNotEmpty) {
+            _addUser(_getSuggestions(value).first);
+            _typeAheadController.clear();
+          }
+        },
+        controller: _typeAheadController,
+        focusNode: _focusNode,
+        autofocus: true,
+        decoration: InputDecoration(
+          labelText: 'Add users',
+          fillColor: secondaryColor,
+          filled: true,
+          border: OutlineInputBorder(
+            borderRadius: const BorderRadius.all(
+                Radius.circular(10)),
+          ),
+        ),
+      ),
+      suggestionsCallback: (pattern) async {
+        return _getSuggestions(pattern);
+      },
+      suggestionsBoxDecoration: SuggestionsBoxDecoration(
+          borderRadius:
+          BorderRadius.all(Radius.circular(10)),
+          shadowColor: Colors.white70,
+          constraints: BoxConstraints(
+              maxHeight:
+              Responsive.shareDialogHeight(context) *
+                  5 /
+                  4)),
+      noItemsFoundBuilder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(8),
+          child: Text(
+            'No Items Found!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: Theme.of(context).disabledColor,
+                fontSize: Theme.of(context)
+                    .textTheme
+                    .subtitle1!
+                    .fontSize),
+          ),
+        );
+      },
+      itemBuilder: (context, User suggestion) {
+        return ListTile(
+          leading: SvgPicture.asset(
+            "icons/menu_profile.svg",
+            color: Colors.white,
+            height: 20,
+          ),
+          title: Text(suggestion.username.capitalize),
+          subtitle: Text(
+            suggestion.email.toLowerCase(),
+            style: Theme.of(context)
+                .textTheme
+                .subtitle1!
+                .copyWith(color: Colors.white54),
+          ),
+        );
+      },
+      onSuggestionSelected: (User suggestion) {
+        _addUser(suggestion);
+        _typeAheadController.clear();
+      },
+    );
+  }
+
   _validateEmail(String? value) {
     return value != null && EmailValidator.validate(value)
         ? null
@@ -286,7 +291,8 @@ class _PopupShareState extends State<PopupShare> {
     if (_suggestions.contains(fakeUser))
       return Future.value(_suggestions.lookup(fakeUser));
     else
-      return await new ApiController().searchUserByEmailContains(email);
+      return await new ApiController().searchUserByEmail(email);
+    // TODO: aggiustare searchUserByEmailContains
   }
 
   HashSet<User> _getSuggestions(String pattern) {

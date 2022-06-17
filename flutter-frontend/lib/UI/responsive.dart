@@ -64,16 +64,16 @@ class Responsive extends StatelessWidget {
     MediaQuery
         .of(context)
         .size
-        .height * 0.3
+        .height * 0.6
         : Responsive.isTablet(context)
         ? MediaQuery
         .of(context)
         .size
-        .height * 0.5
+        .height * 0.6
         : MediaQuery
         .of(context)
         .size
-        .height * 0.5;
+        .height * 0.4;
   }
 
   static double shareDialogWidth(BuildContext context){
@@ -115,16 +115,16 @@ class Responsive extends StatelessWidget {
         ? MediaQuery
         .of(context)
         .size
-        .width * 0.7
+        .width * 0.5
         : Responsive.isTablet(context)
         ? MediaQuery
         .of(context)
         .size
-        .width * 0.8
+        .width * 0.7
         : MediaQuery
         .of(context)
         .size
-        .width * 0.9;
+        .width * 0.8;
   }
 
   @override
