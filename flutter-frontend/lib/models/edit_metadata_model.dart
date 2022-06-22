@@ -19,7 +19,7 @@ class EditMetadataModel{
       {
         'filename': filename,
         'description': description,
-        'tags': tags == null ? null : jsonEncode(tags)
+        'tags': tags == null ? null : jsonEncode(tags!)
       };
 
   @override

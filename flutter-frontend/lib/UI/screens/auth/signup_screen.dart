@@ -1,23 +1,17 @@
 import 'dart:html';
 
 import 'package:admin/UI/constants.dart';
-import 'package:admin/UI/main.dart';
-import 'package:admin/UI/screens/dashboard/home_screen.dart';
 import 'package:admin/api/api_controller.dart';
 import 'package:admin/support/extensions/string_capitalization.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:page_transition/page_transition.dart';
-
 import '../../../controllers/user_provider.dart';
 import '../../../models/user.dart';
 import '../../../support/constants.dart';
-import '../../../support/login_result.dart';
 import '../../behaviors/app_localizations.dart';
 import '../../responsive.dart';
 import '../dashboard/components/feedback_dialog.dart';
-import '../main/main_screen.dart';
 import 'package:cool_alert/cool_alert.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -231,7 +225,7 @@ class _SignupScreenState extends State<SignupScreen> {
             type: CoolAlertType.error,
             context:context, title:"UNKNOWN ERROR").show();
 
-      if(response!.statusCode == HttpStatus.created){
+      else if(response.statusCode == HttpStatus.created){
         FeedbackDialog(
             type: CoolAlertType.success,
             context: context,
@@ -240,8 +234,8 @@ class _SignupScreenState extends State<SignupScreen> {
             .show().whenComplete(() => Navigator.pop(context));
 
       }
-      else if(response!.statusCode == HttpStatus.conflict){
-        if(response!.body == RESPONSE_ERROR_MAIL_USER_ALREADY_EXISTS)
+      else if(response.statusCode == HttpStatus.conflict){
+        if(response.body == RESPONSE_ERROR_MAIL_USER_ALREADY_EXISTS)
           FeedbackDialog(
               type: CoolAlertType.error,
               context:context, title:"ERROR", message:"Already exists an account registered with this email address").show();

@@ -100,7 +100,10 @@ class _PopupUploadState extends State<PopupUpload> {
                 child: Text("Close"),
               ),
             ),
-            if (file != null)
+            if (file != null) ...[
+              Padding(
+                padding: EdgeInsets.only(right: defaultPadding),
+              ),
               ButtonTheme(
                 minWidth: 25.0,
                 height: 25.0,
@@ -118,6 +121,7 @@ class _PopupUploadState extends State<PopupUpload> {
                   child: Text("Confirm"),
                 ),
               ),
+            ]
           ])
         ],
       ),

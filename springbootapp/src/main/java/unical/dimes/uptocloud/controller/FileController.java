@@ -1,8 +1,10 @@
 package unical.dimes.uptocloud.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import org.apache.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.json.JsonParser;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -100,7 +102,7 @@ public class FileController {
                                          @PathVariable("doc_id") Long docID,
                                          @RequestBody EditMetadataModel body) {
         try {
-            fileService.setMetadata(principal.getSubject(), docID, body.getFilename(), body.getDescription(), body.getTags());
+            fileService.setMetadata(principal.getSubject(), docID, body.getFilename(), body.getDescription(),body.getTags());
             return ResponseEntity.status(200).build();
         } catch (UnauthorizedUserException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User must be the owner of the specified document");
@@ -151,15 +153,21 @@ public class FileController {
 
     @Operation(method = "downloadFile", summary = "Download the specified file")
     @PreAuthorize("hasAuthority('user')")
-    @GetMapping(value = "/download/", produces = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> downloadFile(@AuthenticationPrincipal Jwt principal, @RequestParam("file_id") Long docID) {
+    @GetMapping(value = "/download/{doc_id}", produces = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> downloadFile(@AuthenticationPrincipal Jwt principal, @PathVariable("doc_id") Long docID) {
         try {
             Document d = fileService.downloadDocument(principal.getSubject(), docID);
             String tempFilePath = fileService.getFileStorageLocation() + "/" + docID;
             if (d != null) {
                 // readAllBytes -> LIMIT 2GB
                 final ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(Paths.get(tempFilePath)));
-                return ResponseEntity.status(200).contentLength(resource.contentLength()).body(resource);
+                return ResponseEntity
+                        .ok()
+                        .header(HttpHeaders.CONTENT_TYPE, d.getMetadata().getFileType())
+                        .header("Access-Control-Expose-Headers", "Content-Disposition")
+                        .header("Content-Disposition", "attachment; filename=" + d.getName())
+                        .contentLength(resource.contentLength())
+                        .body(resource);
             } else {
                 return ResponseEntity.ok("Error");
             }

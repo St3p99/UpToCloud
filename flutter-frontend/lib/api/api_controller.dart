@@ -160,7 +160,7 @@ Future<User?> searchUserByEmail(String email) async {
   Future<StreamedResponse?> uploadFiles(List<FileDataModel> files) async{
     late StreamedResponse response;
     try {
-       response = await _restManager.makeMultiPartRequest(
+       response = await _restManager.makePostMultiPartRequest(
           ADDRESS_STORE_SERVER, REQUEST_UPLOAD_FILES, files);
     }catch(e){
       print("uploadFiles exception: "+e.toString());
@@ -198,10 +198,22 @@ Future<User?> searchUserByEmail(String email) async {
   Future<StreamedResponse?> uploadFile(FileDataModel file) async{
     late StreamedResponse response;
     try {
-      response = await _restManager.makeMultiPartRequest(
+      response = await _restManager.makePostMultiPartRequest(
           ADDRESS_STORE_SERVER, REQUEST_UPLOAD_FILE, file);
     }catch(e){
       print("uploadFile exception: "+e.toString());
+      return null;
+    }
+    return response;
+  }
+
+  Future<StreamedResponse?> downloadFile(Document d) async{
+    late StreamedResponse response;
+    try {
+      response = await _restManager.makeGetMultiPartRequest(
+          ADDRESS_STORE_SERVER, REQUEST_DOWNLOAD_FILE + "/" + d.id.toString());
+    }catch(e){
+      print("downloadFile exception: "+e.toString());
       return null;
     }
     return response;

@@ -37,7 +37,7 @@ public class UserService {
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public User createUser(User user) {
+    public User createUser(User user){
         return userRepository.save(user);
     }
 

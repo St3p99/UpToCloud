@@ -96,7 +96,7 @@ class RestManager {
     }
   }
 
-  Future<StreamedResponse> makeMultiPartRequest(
+  Future<StreamedResponse> makePostMultiPartRequest(
       String serverAddress, String servicePath, dynamic files,
       {bool httpsEnabled = false}) async {
     Uri uri;
@@ -123,6 +123,25 @@ class RestManager {
           await MultipartFile('file', files.stream, files.bytes, filename: files.name, contentType: MediaType.parse(files.mime))
       );
     else throw Exception();
+    print(uri.toString());
+    StreamedResponse res = await request.send();
+    return res;
+  }
+
+  Future<StreamedResponse> makeGetMultiPartRequest(
+      String serverAddress, String servicePath,
+      {bool httpsEnabled = false}) async {
+    Uri uri;
+    if (httpsEnabled)
+      uri = Uri.https(serverAddress, servicePath);
+    else
+      uri = Uri.http(serverAddress, servicePath);
+
+    MultipartRequest request = MultipartRequest('GET', uri);
+    Map<String, String> headers = new Map();
+    headers[HttpHeaders.authorizationHeader] = 'bearer $token';
+    request.headers.addAll(headers);
+
     print(uri.toString());
     StreamedResponse res = await request.send();
     return res;

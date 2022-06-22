@@ -51,17 +51,11 @@ class Document {
   }
 
   String getFileSize(){
-    double byte = this.metadata.fileSize;
-    double kbyte = byte/1024;
-    if(kbyte.toStringAsFixed(FILE_SIZE_FRACTION_DIGITS).length < 3+FILE_SIZE_FRACTION_DIGITS){
-      return kbyte.toStringAsFixed(FILE_SIZE_FRACTION_DIGITS)+" KB";
-    }
-    double mbyte = kbyte/1024;
-    if(mbyte.toStringAsFixed(FILE_SIZE_FRACTION_DIGITS).length < 3+FILE_SIZE_FRACTION_DIGITS){
-      return mbyte.toStringAsFixed(FILE_SIZE_FRACTION_DIGITS)+" MB";
-    }
-    return (mbyte/1024).toStringAsFixed(FILE_SIZE_FRACTION_DIGITS)+" GB";
+    return FileUtils.getFileSize(this.metadata.fileSize);
   }
+
+
+
 }
 
 List<Document> demoFiles = [

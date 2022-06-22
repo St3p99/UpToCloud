@@ -7,12 +7,13 @@ import '../../../constants.dart';
 import '../../../responsive.dart';
 
 class FeedbackDialog{
-  FeedbackDialog({Key? key, required this.type, required this.context, required this.title, this.message});
+  FeedbackDialog({Key? key, required this.type, required this.context, required this.title, this.message, this.onConfirmBtnTap});
 
   CoolAlertType type;
   BuildContext context;
   String title;
   String? message;
+  Function? onConfirmBtnTap;
 
   Future show(){
     return CoolAlert.show(
@@ -25,6 +26,9 @@ class FeedbackDialog{
         MediaQuery.of(context).size.width*.2,
         backgroundColor: bgColor,
         confirmBtnColor: primaryColor,
-        onConfirmBtnTap: () => Navigator.pop(context));
+        onConfirmBtnTap: () {
+            onConfirmBtnTap == null ? Navigator.pop(context) : onConfirmBtnTap!();
+        }
+    );
   }
 }

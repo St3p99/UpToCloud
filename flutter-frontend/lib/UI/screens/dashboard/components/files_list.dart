@@ -1,18 +1,25 @@
 import 'dart:collection';
+import 'dart:html';
+import 'dart:io';
 
 import 'package:admin/UI/screens/dashboard/components/delete_files_alert_dialog.dart';
 import 'package:admin/UI/screens/dashboard/components/file_datatable_source.dart';
+import 'package:admin/UI/screens/dashboard/components/handle_download_widget.dart';
 import 'package:admin/UI/screens/dashboard/components/popup_edit_metadata_.dart';
 import 'package:admin/UI/screens/dashboard/components/popup_share.dart';
 import 'package:admin/UI/screens/dashboard/components/popup_upload.dart';
 import 'package:admin/UI/screens/dashboard/components/shared_file_datatable_source.dart';
+import 'package:admin/api/api_controller.dart';
+import 'package:cool_alert/cool_alert.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:http/http.dart';
 import '../../../../models/document.dart';
 import '../../../../support/constants.dart';
 import '../../../constants.dart';
 import '../../../responsive.dart';
+import 'feedback_dialog.dart';
 import 'my_abstract_datatable_source.dart';
 
 class FilesList extends StatefulWidget {
@@ -254,6 +261,7 @@ class _FilesListState extends State<FilesList> {
               deleteButton()
             ],
             if (_selectedFiles.length == 1) ...[
+              downloadButton(),
               if (widget.isOwner) ...[
                 shareButton(),
                 metadataButton(),
@@ -276,7 +284,10 @@ class _FilesListState extends State<FilesList> {
         showDialog(
             context: context,
             builder: (context) =>
-                PopupShare(file: datasource.getSelectedFile())).whenComplete(() => fetch);
+                PopupShare(file: datasource.getSelectedFile())).whenComplete(() {
+          sleep(Duration(seconds:1));
+          fetch();
+        });
       },
     );
   }
@@ -293,7 +304,10 @@ class _FilesListState extends State<FilesList> {
         DeleteFilesAlertDialog(
             context: context,
           files: datasource.getSelectedFiles()
-        ).show().whenComplete(() => fetch());
+        ).show().whenComplete(() {
+            sleep(Duration(seconds:1));
+            fetch();
+        });
       }
     );
   }
@@ -306,7 +320,14 @@ class _FilesListState extends State<FilesList> {
         color: Colors.white,
         height: 20,
       ),
-      onPressed: () {},
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          new SnackBar(
+              duration: Duration(days: 1),
+              content: HandleDownloadWidget(file: datasource.getSelectedFile(),)
+          ),
+        );
+      },
     );
   }
 
@@ -322,7 +343,10 @@ class _FilesListState extends State<FilesList> {
         showDialog(
             context: context,
             builder: (context) =>
-                PopupEditMetadata(file: datasource.getSelectedFile())).whenComplete(() => fetch);
+                PopupEditMetadata(file: datasource.getSelectedFile())).whenComplete(() {
+          sleep(Duration(seconds:1));
+          fetch();
+        });
       },
     );
   }
@@ -364,7 +388,10 @@ class _FilesListState extends State<FilesList> {
         showDialog(
             context: context,
             builder: (context) =>
-                PopupShare(file: datasource.getSelectedFile())).whenComplete(() => fetch);
+                PopupShare(file: datasource.getSelectedFile())).whenComplete(() {
+          sleep(Duration(seconds:1));
+          fetch();
+        });
       },
     );
   }
@@ -382,7 +409,10 @@ class _FilesListState extends State<FilesList> {
         DeleteFilesAlertDialog(
             context: context,
             files: datasource.getSelectedFiles()
-        ).show().whenComplete(() => fetch());
+        ).show().whenComplete(() {
+          sleep(Duration(seconds:1));
+          fetch();
+        });
       },
     );
   }
@@ -395,7 +425,11 @@ class _FilesListState extends State<FilesList> {
         color: Colors.white,
         height: 20,
       ),
-      onPressed: () {},
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+            new SnackBar(content: HandleDownloadWidget(file: datasource.getSelectedFile()))
+        );
+      },
     );
   }
 
@@ -411,8 +445,14 @@ class _FilesListState extends State<FilesList> {
         showDialog(
             context: context,
             builder: (context) =>
-                PopupEditMetadata(file: datasource.getSelectedFile())).whenComplete(() => fetch);
+                PopupEditMetadata(file: datasource.getSelectedFile())).whenComplete(() {
+          sleep(Duration(seconds:1));
+          fetch();
+        });
       },
     );
   }
+
+
+
 }
