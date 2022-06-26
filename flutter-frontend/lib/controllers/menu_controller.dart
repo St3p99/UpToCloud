@@ -16,5 +16,8 @@ class MenuController extends ChangeNotifier {
   void updateWidget(Widget widget) {
     currentWidget = widget;
     notifyListeners();
+    if (_scaffoldKey.currentState!.isDrawerOpen) {
+      _scaffoldKey.currentState!.closeDrawer();
+    }
   }
 }

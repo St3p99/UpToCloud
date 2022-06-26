@@ -27,6 +27,7 @@ class _SignupScreenState extends State<SignupScreen> {
   late String _email;
   late String _username;
   late String _password;
+  bool _obscureText = true;
   final _formKey = GlobalKey<FormState>();
   UserProvider userProvider = new UserProvider();
 
@@ -118,14 +119,29 @@ class _SignupScreenState extends State<SignupScreen> {
                           height: defaultPadding,
                         ),
                         TextFormField(
+                          obscureText: _obscureText,
                           decoration: InputDecoration(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                // Based on passwordVisible state choose the icon
+                                _obscureText
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: primaryColor,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureText = !_obscureText;
+                                });
+                              },
+                            ),
                             label: Text("password"),
                             hintText: "Please write your password",
                             fillColor: secondaryColor,
                             filled: true,
                             border: OutlineInputBorder(
                               borderRadius:
-                                  const BorderRadius.all(Radius.circular(10)),
+                              const BorderRadius.all(Radius.circular(10)),
                             ),
                           ),
                           validator: (value) => _validatePassword(value!),
@@ -134,7 +150,6 @@ class _SignupScreenState extends State<SignupScreen> {
                             // _password = value;
                             _signup();
                           },
-                          obscureText: true, //TODO: button obscureText
                         ),
                       ]),
                     ),

@@ -1,9 +1,13 @@
 package unical.dimes.uptocloud.service;
 
+import com.azure.search.documents.indexes.models.IndexingSchedule;
+import com.azure.search.documents.indexes.models.SearchIndexer;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.specialized.BlockBlobClient;
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +24,7 @@ import unical.dimes.uptocloud.support.exception.FileSizeExceededException;
 import unical.dimes.uptocloud.support.exception.ResourceNotFoundException;
 import unical.dimes.uptocloud.support.exception.UnauthorizedUserException;
 import unical.dimes.uptocloud.support.exception.UniqueKeyViolationException;
+
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -66,7 +71,9 @@ public class FileService {
     }
 
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
-    public Document uploadDocument(String userID, MultipartFile file) throws UniqueKeyViolationException, Exception {
+    public Document uploadDocument(String userID, MultipartFile file)
+            throws UniqueKeyViolationException, FileSizeExceededException,
+                    ResourceNotFoundException, IOException {
         if(file.getSize() > FileUtils.ONE_MB*max_file_size)
             throw new FileSizeExceededException();
         User u = null;
@@ -100,6 +107,7 @@ public class FileService {
             d.setResourceUrl(resourceUrl);
             d = documentRepository.save(d);
 
+            searchService.runIndexer(u.getContainerName()); // run indexer
             success = true;
         }catch (ResourceNotFoundException e){
             logger.warning(e.toString());
@@ -128,6 +136,7 @@ public class FileService {
         }
 
         deleteFromBlob(u, d);
+        searchService.runIndexer(u.getContainerName()); // run indexer
         documentRepository.delete(d);
     }
 
@@ -146,6 +155,7 @@ public class FileService {
             deleteFromBlob(u, d);
             documentRepository.delete(d);
         }
+        searchService.runIndexer(u.getContainerName()); // run indexer
     }
 
     private String uploadToBlob(User u, Document d, MultipartFile file, Map<String, String> metadata) throws IOException {
@@ -184,18 +194,21 @@ public class FileService {
         BlockBlobClient blockBlobClient = getOrCreateAndGetContainerByOwner(u).getBlobClient(d.getId().toString()).getBlockBlobClient();
         Map<String, String> blobMetadata = blockBlobClient.getProperties().getMetadata();
 
-        if(filename!=null){
+        if(filename!=null && !filename.isEmpty()){
             d.setName(filename);
             blobMetadata.put(MetadataCategory.FILE_NAME.toString(), filename);
         }
 
-        if(description!=null){
+        if(description!=null && !description.isEmpty()){
             dm.setDescription(description);
             blobMetadata.put(MetadataCategory.DESCRIPTION.toString(), description);
+        }else{
+            dm.setDescription("");
+            blobMetadata.remove(MetadataCategory.DESCRIPTION.toString());
         }
 
         if(tagsName!=null && !tagsName.isEmpty()){
-            StringBuilder sb = new StringBuilder();
+//            StringBuilder sb = new StringBuilder();
             Tag t;
             for (String tagName: tagsName) {
                 Optional<Tag> ot = tagRepository.findByName(tagName);
@@ -206,17 +219,20 @@ public class FileService {
                 }
                 if(!tags.contains(t)){
                     tags.add(t);
-                    sb.append(tagName).append(":");
+//                    sb.append(tagName).append(":");
                 }
             }
             dm.setTags(new LinkedList<>(tags));
-            blobMetadata.put(MetadataCategory.TAGS.toString(), sb.toString());
+            JsonArray jsonArray = Json.createArrayBuilder(tagsName).build();
+//            blobMetadata.put(MetadataCategory.TAGS.toString(), sb.toString());
+            blobMetadata.put(MetadataCategory.TAGS.toString(), jsonArray.toString());
         }else{
             dm.setTags(new LinkedList<>());
             blobMetadata.remove(MetadataCategory.TAGS.toString());
         }
-
+        System.out.println(blobMetadata);
         blockBlobClient.setMetadata(blobMetadata);
+        searchService.runIndexer(u.getContainerName()); // run indexer
         documentMetadataRepository.save(dm);
         documentRepository.save(d);
     }
@@ -321,7 +337,7 @@ public class FileService {
         // Create the container and return a container client object
         BlobContainerClient blobContainerClient =blobServiceClient.createBlobContainer(containerName);
 
-        // TODO: spostare dove vanno spostati
+        // CONNECT TO AZURE SEARCH SERVICE
         searchService.getOrCreateAndGetDataSourceConnection(containerName);
         searchService.getOrCreateAndGetSearchIndexer(containerName);
         return blobContainerClient;
@@ -458,4 +474,5 @@ public class FileService {
 
         return suggestions;
     }
+
 }

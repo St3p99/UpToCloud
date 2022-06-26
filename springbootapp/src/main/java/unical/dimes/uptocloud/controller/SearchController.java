@@ -1,5 +1,6 @@
 package unical.dimes.uptocloud.controller;
 
+import com.azure.search.documents.util.SearchPagedIterable;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,21 +10,29 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import unical.dimes.uptocloud.model.Document;
+import unical.dimes.uptocloud.model.Tag;
 import unical.dimes.uptocloud.service.DocumentService;
+import unical.dimes.uptocloud.service.SearchService;
 import unical.dimes.uptocloud.support.exception.ResourceNotFoundException;
+
+import javax.naming.directory.SearchResult;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("${base-url}/search")
 public class SearchController {
 
     private final DocumentService documentService;
+    private final SearchService searchService;
 
     @Autowired
-    public SearchController(DocumentService documentService) {
+    public SearchController(DocumentService documentService, SearchService searchService) {
         this.documentService = documentService;
+        this.searchService = searchService;
     }
 
     @Operation(method = "getRecentFilesOwned", summary = "Get recent files owned")
@@ -49,6 +58,79 @@ public class SearchController {
             if (result.size() <= 0)
                 return ResponseEntity.noContent().build();
             return ResponseEntity.ok(result);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");
+        }
+    }
+
+
+    @Operation(method = "searchAnyFieldsContains", summary = "")
+    @GetMapping(value = "/any-fields-contains")
+    @PreAuthorize("hasAuthority('user')")
+    public ResponseEntity searchAnyFieldsContains(@AuthenticationPrincipal Jwt principal, @RequestParam("text") String text,
+                                                  @RequestParam("searchInContent") boolean searchInContent) {
+        try {
+            List<Document> result = searchService.searchAnyFieldsContains(principal.getSubject(), searchInContent, text);
+            if (result.size() <= 0)
+                return ResponseEntity.noContent().build();
+           return ResponseEntity.ok().body(result);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");
+        }
+    }
+
+    @Operation(method = "searchAnyFieldsContainsAndTags", summary = "")
+    @GetMapping(value = "/any-fields-contains-and-tags")
+    @PreAuthorize("hasAuthority('user')")
+    public ResponseEntity searchAnyFieldsContainsAndTags(@AuthenticationPrincipal Jwt principal, @RequestParam("text") String text, @RequestParam("tags") List<String> tags,
+                                                         @RequestParam("searchInContent") boolean searchInContent) {
+        try {
+            List<Document> result = searchService.searchByAnyFieldsContainsAndTags(principal.getSubject(), searchInContent, text, tags);
+            if (result.size() <= 0)
+                return ResponseEntity.noContent().build();
+            return ResponseEntity.ok().body(result);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");
+        }
+    }
+
+    @Operation(method = "searchByTags", summary = "")
+    @GetMapping(value = "/by-tags")
+    @PreAuthorize("hasAuthority('user')")
+    public ResponseEntity searchByTags(@AuthenticationPrincipal Jwt principal, @RequestParam("tags") List<String> tags) {
+        try {
+            List<Document> result = searchService.searchByTags(principal.getSubject(),  tags);
+            if (result.size() <= 0)
+                return ResponseEntity.noContent().build();
+            return ResponseEntity.ok().body(result);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");
+        }
+    }
+
+    @Operation(method = "autocomplete", summary = "")
+    @GetMapping(value = "/autocomplete")
+    @PreAuthorize("hasAuthority('user')")
+    public ResponseEntity autocomplete(@AuthenticationPrincipal Jwt principal, @RequestParam("text") String text) {
+        try {
+            List<String> result = searchService.autocomplete(principal.getSubject(), text);
+            if (result.size() <= 0)
+                return ResponseEntity.noContent().build();
+            return ResponseEntity.ok().body(result);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");
+        }
+    }
+
+    @Operation(method = "getTagSuggestions", summary = "")
+    @GetMapping(value = "/tag-suggestions")
+    @PreAuthorize("hasAuthority('user')")
+    public ResponseEntity getTagSuggestions(@AuthenticationPrincipal Jwt principal) {
+        try {
+            Set<Tag> result = searchService.getTagSuggestions(principal.getSubject());
+            if (result.size() <= 0)
+                return ResponseEntity.noContent().build();
+            return ResponseEntity.ok().body(result);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");
         }

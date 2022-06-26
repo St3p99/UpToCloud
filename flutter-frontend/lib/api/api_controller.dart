@@ -10,6 +10,7 @@ import 'package:http/http.dart';
 
 import '../managers/rest_manager.dart';
 import '../models/file_data_model.dart';
+import '../models/tag.dart';
 import '../models/user.dart';
 import '../support/constants.dart';
 
@@ -222,11 +223,12 @@ Future<User?> searchUserByEmail(String email) async {
 
   Future<Response?> setMetadata(int docID, String filename, String description, List<String> tags) async{
     try {
-      EditMetadataModel body = EditMetadataModel(
-          filename: filename, description: description,
-          tags:tags.length > 0 ? tags: null);
+      Map<String, dynamic> params = Map();
+      params["filename"] = filename;
+      params["description"] = description;
+      params["tags"] = tags;
       Response response = await _restManager.makePostRequest(
-          ADDRESS_STORE_SERVER, REQUEST_SET_METADATA + "/" + docID.toString(), body);
+          ADDRESS_STORE_SERVER, REQUEST_SET_METADATA + "/" + docID.toString(), null, value: params);
       if (response.statusCode == HttpStatus.notFound) return null;
       return response;
     } catch (e) {
@@ -299,6 +301,82 @@ Future<User?> searchUserByEmail(String email) async {
     }
   }
 
+  Future<List<Document>?> searchAnyFieldsContains(String text, {bool searchInContent = false}) async{
+    try {
+      Map<String, dynamic> params = Map();
+      params["text"] = text;
+      params["searchInContent"] = searchInContent;
+      Response response = await _restManager.makeGetRequest(
+          ADDRESS_STORE_SERVER, REQUEST_SEARCH_ANY_FIELDS_CONTAINS, params);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      if (response.statusCode == HttpStatus.noContent) return List.empty(growable: true);
+      return List<Document>.from(json
+          .decode(response.body)
+          .map((i) => Document.fromJson(i))
+          .toList());
+    } catch (e) {
+      print("searchAnyFieldsContains exception: " + e.toString());
+      return null;
+    }
+  }
 
+  Future<List<Document>?> search(String text, List<String> tags, {bool searchInContent = false}) async{
+    try {
+      Map<String, dynamic> params = Map();
+      params["text"] = text;
+      String requestAddress = "";
+      if(tags!=null && tags.isNotEmpty){
+        params["tags"] = tags;
+        requestAddress = REQUEST_SEARCH_ANY_FIELDS_CONTAINS_AND_TAGS;
+      }
+      else requestAddress = REQUEST_SEARCH_ANY_FIELDS_CONTAINS;
+      params["searchInContent"] = jsonEncode(searchInContent);
+      Response response = await _restManager.makeGetRequest(
+          ADDRESS_STORE_SERVER,
+          requestAddress, params);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      if (response.statusCode == HttpStatus.noContent) return List.empty(growable: true);
+      return List<Document>.from(json
+          .decode(response.body)
+          .map((i) => Document.fromJson(i))
+          .toList());
+    } catch (e) {
+      print("search exception: " + e.toString());
+      return null;
+    }
+  }
+
+    Future<List<String>?> autocomplete(String text) async{
+      try {
+        Map<String, dynamic> params = Map();
+        params["text"] = text;
+        Response response = await _restManager.makeGetRequest(
+            ADDRESS_STORE_SERVER, REQUEST_SEARCH_AUTOCOMPLETE, params);
+        if (response.statusCode == HttpStatus.notFound) return null;
+        if (response.statusCode == HttpStatus.noContent) return List.empty(growable: true);
+        return List<String>.from(json
+            .decode(response.body)
+            .map((i) => i)
+            .toList());
+      } catch (e) {
+        print("autocomplete exception: " + e.toString());
+        return null;
+      }
+    }
+
+  Future<List<String>?> getTagSuggestions() async{
+    try {
+      Response response = await _restManager.makeGetRequest(
+          ADDRESS_STORE_SERVER, REQUEST_SEARCH_TAG_SUGGESTIONS);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      if (response.statusCode == HttpStatus.noContent) return List.empty(growable: true);
+      return List<String>.from(json
+          .decode(response.body)
+          .map((tag) => Tag.fromJson(tag).name).toList());
+    } catch (e) {
+      print("getTagSuggestions exception: " + e.toString());
+      return null;
+    }
+  }
 }
 

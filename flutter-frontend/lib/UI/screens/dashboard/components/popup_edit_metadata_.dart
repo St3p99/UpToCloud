@@ -23,16 +23,17 @@ class PopupEditMetadata extends StatefulWidget {
 
 class _PopupEditMetadataState extends State<PopupEditMetadata> {
   final _formKey = GlobalKey<FormState>();
-
+  late FocusNode _focusNode;
   final TextEditingController _tagsEditingController = TextEditingController();
 
   String get _inputTags => _tagsEditingController.text.trim();
 
   late String _filename;
   late String _description;
-  late List<String> _tags;
-  late List<String> _suggestions = ["test1", "non", "ho", "fantasia"];
-  late FocusNode _focusNode;
+  late List<String> _tagsSelected = List.empty(growable: true);
+  List<String> _tags = List.empty();
+  List<String> _tagsSuggestions = List.empty(growable: true);
+
 
   refreshState(VoidCallback fn) {
     if (mounted) setState(fn);
@@ -40,16 +41,16 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
 
   @override
   void initState() {
+    _initTagSuggestions();
     setState((){
       _filename = widget.file.name;
       if(widget.file.metadata.description != null)
         _description = widget.file.metadata.description!;
       else _description = "";
       if(widget.file.metadata.tags != null)
-        _tags = widget.file.metadata.tags!;
-      else _tags = List.empty(growable: true);
+        _tagsSelected = widget.file.metadata.tags!;
+      else _tagsSelected = List.empty(growable: true);
     });
-
     super.initState();
     _focusNode = FocusNode();
     _tagsEditingController.addListener(() => refreshState(() {}));
@@ -62,9 +63,18 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
     _tagsEditingController.dispose();
   }
 
+  _initTagSuggestions() async{
+    List<String>? result = await new ApiController().getTagSuggestions();
+    if( result!=null)
+      setState((){
+        _tags = result;
+      });
+    _filterTagSuggestions();
+  }
+
   void _pushData() async{
     _formKey.currentState!.save();
-    Response? response = await new ApiController().setMetadata(widget.file.id, _filename, _description, _tags);
+    Response? response = await new ApiController().setMetadata(widget.file.id, _filename, _description, _tagsSelected);
     switch (response!.statusCode) {
       case 200:
         {
@@ -112,7 +122,14 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
                     key: _formKey,
                     child: Column(children: [
                       Text(
-                        "\"" + widget.file.name + "\" | Edit Metadata",
+                        "Edit Metadata",
+                        style: Theme.of(context).textTheme.headline6,
+                      ),
+                      Padding(
+                          padding:
+                          EdgeInsets.symmetric(vertical: defaultPadding/2)),
+                      Text(
+                        "\"" + widget.file.name + "\"",
                         style: Theme.of(context).textTheme.headline6,
                       ),
                       Padding(
@@ -213,10 +230,10 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_tags.length > 0) ...[
+        if (_tagsSelected.length > 0) ...[
           Wrap(
             alignment: WrapAlignment.start,
-            children: _tags
+            children: _tagsSelected
                 .map((tag) => tagChip(
                       tag: tag,
                       onTap: () => _removeTag(tag),
@@ -234,7 +251,7 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
         Padding(
           padding: EdgeInsets.only(bottom: defaultPadding / 2),
         ),
-        _displaySuggestions(),
+        _displayTagSuggestions(),
       ],
     );
   }
@@ -256,7 +273,9 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
                   borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
               ),
-              // onChanged: (value) => _inputTags = value!,
+              onChanged: (String value) async {
+                _filterTagSuggestions();
+              },
               onSubmitted: (value) {
                 _addTag(value);
                 _tagsEditingController.clear();
@@ -325,59 +344,65 @@ class _PopupEditMetadataState extends State<PopupEditMetadata> {
   }
 
   _addTag(String tag) async {
-    if (!_tags.contains(tag))
+    if (!_tagsSelected.contains(tag))
       setState(() {
-        _tags.add(tag);
+        _tagsSelected.add(tag);
       });
   }
 
   _removeTag(String tag) async {
-    if (_tags.contains(tag)) {
+    if (_tagsSelected.contains(tag)) {
       setState(() {
-        _tags.remove(tag);
+        _tagsSelected.remove(tag);
       });
     }
   }
 
-  _displaySuggestions() {
-    return _suggestions.isNotEmpty
-        ? _buildSuggestionWidget()
-        : Text('No Labels added');
+  _displayTagSuggestions() {
+    return _tagsSelected.isNotEmpty
+        ? _buildTagsSuggestionWidget()
+        : Text('No Tags added');
   }
 
-  List<String> _filterSearchResultList() {
-    if (_inputTags.isEmpty) return _suggestions;
-
+  void _filterTagSuggestions() {
     List<String> _tempList = [];
-    for (int index = 0; index < _suggestions.length; index++) {
-      String tag = _suggestions[index];
+    for (int index = 0; _inputTags.isNotEmpty && index < _tags.length; index++) {
+      String tag = _tags[index];
       if (tag.toLowerCase().trim().contains(_inputTags.toLowerCase())) {
         _tempList.add(tag);
       }
     }
-
-    return _tempList;
+    for (int index = 0; _tempList.length < 5 && index < _tags.length; index++) {
+      String tag = _tags[index];
+      if (!_tempList.contains(tag)) _tempList.add(tag);
+    }
+    setState(() {
+      _tagsSuggestions = _tempList;
+    });
   }
 
-  Widget _buildSuggestionWidget() {
+  Widget _buildTagsSuggestionWidget() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (_filterSearchResultList().length > 0) ...[
+      if (_tagsSuggestions.length  - _tagsSelected.length > 0) ...[
         Text(
-          'Suggestions',
+          'Tag suggestions',
           style: Theme.of(context).textTheme.labelSmall,
         ),
         Padding(
-          padding: EdgeInsets.only(bottom: defaultPadding / 2),
+          padding: EdgeInsets.only(bottom: defaultPadding),
         ),
         Wrap(
           alignment: WrapAlignment.start,
-          children: _filterSearchResultList()
-              .where((tag) => !_tags.contains(tag))
+          children: _tagsSuggestions
+              .where((tag) => !_tagsSelected.contains(tag))
               .map((tag) => tagChip(
-                    tag: tag,
-                    onTap: () => _addTag(tag),
-                    action: 'add',
-                  ))
+            tag: tag,
+            onTap: () {
+              _addTag(tag);
+              _tagsEditingController.clear();
+            },
+            action: 'add',
+          ))
               .toList(),
         ),
       ]

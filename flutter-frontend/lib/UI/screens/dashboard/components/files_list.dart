@@ -8,7 +8,9 @@ import 'package:admin/UI/screens/dashboard/components/handle_download_widget.dar
 import 'package:admin/UI/screens/dashboard/components/popup_edit_metadata_.dart';
 import 'package:admin/UI/screens/dashboard/components/popup_share.dart';
 import 'package:admin/UI/screens/dashboard/components/popup_upload.dart';
+import 'package:admin/UI/screens/dashboard/components/search_result_datatable_source.dart';
 import 'package:admin/UI/screens/dashboard/components/shared_file_datatable_source.dart';
+import 'package:admin/UI/screens/dashboard/components/shared_search_result_datatable_source.dart';
 import 'package:admin/api/api_controller.dart';
 import 'package:cool_alert/cool_alert.dart';
 
@@ -44,21 +46,31 @@ class _FilesListState extends State<FilesList> {
 
   late HashSet<int> _selectedFiles;
   late Future<List<Document>> _future;
-  late List<Document>? _result;
+  // late List<Document>? _result;
   late bool _sortAsc;
   late int _sortColumnIndex;
   late MyAbstractDataTableSource datasource;
   String? _selectedOption = null;
+  bool _searchPage = false;
 
   @override
   initState() {
-    if (widget.datasource is FileDataTableSource)
+    if( widget.datasource is SearchResultDataTableSource){
+      datasource = new SearchResultDataTableSource(widget.datasource.result);
+      _searchPage = true;
+    }
+    else if(widget.datasource is SharedSearchResultDataTableSource){
+      datasource = new SharedSearchResultDataTableSource(widget.datasource.result);
+      _searchPage = true;
+    }
+    else if (widget.datasource is FileDataTableSource)
       datasource = new FileDataTableSource();
     else
       datasource = new SharedFileDataTableSource();
-    fetch();
+
     datasource.addListener(_handleDataSourceChanged);
     super.initState();
+    fetch();
     _handleDataSourceChanged();
   }
 
@@ -71,7 +83,7 @@ class _FilesListState extends State<FilesList> {
 
   void _handleDataSourceChanged() {
     setState(() {
-      _result = datasource.result;
+      // _result = datasource.result;
       _selectedFiles = datasource.selectedFiles;
       _sortAsc = datasource.sortAsc;
       _sortColumnIndex = datasource.sortColumnIndex;
@@ -145,7 +157,7 @@ class _FilesListState extends State<FilesList> {
             },
           ),
           Padding(padding: EdgeInsets.only(right: defaultPadding)),
-          if (widget.isOwner) ...[
+          if (widget.isOwner && !_searchPage) ...[
             ElevatedButton.icon(
               style: TextButton.styleFrom(
                 padding: EdgeInsets.symmetric(

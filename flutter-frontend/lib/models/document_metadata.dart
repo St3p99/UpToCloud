@@ -1,3 +1,4 @@
+import 'package:admin/models/tag.dart';
 import 'package:admin/support/date_time_utils.dart';
 
 import 'document.dart';
@@ -31,7 +32,7 @@ class DocumentMetadata {
       fileType: json['fileType'],
       fileSize: json['fileSize'],
       tags: json['tags'] == null ? null : List<String>.from(
-          json['tags'].map((tag) => tag['name']).toList()
+          json['tags'].map((tag) => Tag.fromJson(tag).name).toList()
       )
     );
   }

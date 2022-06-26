@@ -61,11 +61,12 @@ public class User {
     @Column(insertable = false, updatable = false)
     private List<Document> documentsOwned;
 
+    @EqualsAndHashCode.Exclude
     @ToString.Exclude
     @JsonIgnore
     @ManyToMany(mappedBy = "readers")
     @Column(insertable = false, updatable = false)
-    private Set<Document> documentsReadable;
+    private List<Document> documentsReadable;
 
     @Override
     public boolean equals(Object o) {

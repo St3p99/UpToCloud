@@ -9,18 +9,24 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Objects;
 
 /* lombok auto-generated code */
 @Getter
 @Setter
-@EqualsAndHashCode
 @ToString
 /* lombok auto-generated code */
 
 @Entity
 @Table(
         name = "tag",
-        schema = "public"
+        schema = "public",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "tag_name_id_unique",
+                        columnNames = {"name"}
+                )
+        }
 )
 public class Tag {
     @JsonIgnore
@@ -33,11 +39,24 @@ public class Tag {
     @Column(name = "name")
     private String name;
 
-    @JsonBackReference
+    @JsonIgnore
     @ManyToMany(mappedBy = "tags")
     private List<DocumentMetadata> documents;
 
     public Tag(){}
     public Tag(String name){this.name = name;}
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Tag)) return false;
+        Tag tag = (Tag) o;
+        return name.equals(tag.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
 }
 

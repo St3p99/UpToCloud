@@ -11,11 +11,13 @@ public class Runner implements CommandLineRunner {
 
     @Autowired
     public Runner(AzureSearchConfig azureSearchConfig) {
+
         this.azureSearchConfig = azureSearchConfig;
     }
 
     @Override
     public void run(String... args){
         azureSearchConfig.configure();
+
     }
 }

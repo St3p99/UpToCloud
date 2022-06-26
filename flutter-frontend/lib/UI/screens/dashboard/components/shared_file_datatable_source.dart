@@ -80,16 +80,16 @@ class SharedFileDataTableSource extends MyAbstractDataTableSource {
     }
   }
 
+  @override
   Future<List<Document>>? pullData() async {
-    // result = demoFilesShared;
-    // result!.forEach((file) {file.loadIcon();});
-    // return result!;
     List<Document>? recentFiles = await api.loadRecentFilesReadOnly();
     recentFiles!.forEach((file) {file.loadIcon();});
     result = recentFiles;
+    notifyListeners();
     return result!;
   }
 
+  @override
   void sort(int columnIndex, bool sortAscending) {
     switch(columnIndex){
       case 0: {

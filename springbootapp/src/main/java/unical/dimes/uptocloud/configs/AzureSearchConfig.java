@@ -4,24 +4,22 @@ package unical.dimes.uptocloud.configs;
 import com.azure.core.credential.AzureKeyCredential;
 import com.azure.core.http.rest.Response;
 import com.azure.core.util.Context;
+import com.azure.search.documents.SearchAsyncClient;
 import com.azure.search.documents.SearchClient;
 import com.azure.search.documents.SearchClientBuilder;
 import com.azure.search.documents.indexes.*;
 import com.azure.search.documents.indexes.models.SearchField;
 import com.azure.search.documents.indexes.models.SearchFieldDataType;
 import com.azure.search.documents.indexes.models.SearchIndex;
-import com.azure.search.documents.indexes.models.SearchIndexerDataSourceConnection;
-import org.apache.http.client.HttpResponseException;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.azure.search.documents.indexes.models.SearchSuggester;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.http.HttpStatus;
 
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.List;
 
 @Configuration
 public class AzureSearchConfig {
@@ -33,6 +31,9 @@ public class AzureSearchConfig {
     @Value("${azure.search.indexName}")
     private String indexName;
 
+    public static final List<String> searchableFieldNames =
+            List.of("tags", "fileType", "description", "filename", "metadata_storage_file_extension");
+
 
     @Bean
     public SearchIndexClient getSearchIndexClient(){
@@ -43,11 +44,27 @@ public class AzureSearchConfig {
     }
 
     @Bean
+    public SearchIndexAsyncClient getSearchIndexAsyncClient(){
+        return new SearchIndexClientBuilder()
+                .endpoint("https://"+serviceName+".search.windows.net")
+                .credential(new AzureKeyCredential(adminKey))
+                .buildAsyncClient();
+    }
+
+    @Bean
     public SearchIndexerClient getSearchIndexerClient(){
         return new SearchIndexerClientBuilder()
                 .endpoint("https://"+serviceName+".search.windows.net")
                 .credential(new AzureKeyCredential(adminKey))
                 .buildClient();
+    }
+
+    @Bean
+    public SearchIndexerAsyncClient getSearchIndexerAsyncClient(){
+        return new SearchIndexerClientBuilder()
+                .endpoint("https://"+serviceName+".search.windows.net")
+                .credential(new AzureKeyCredential(adminKey))
+                .buildAsyncClient();
     }
     @Bean
     public SearchClient getSearchClient(){
@@ -56,6 +73,15 @@ public class AzureSearchConfig {
                 .credential(new AzureKeyCredential(adminKey))
                 .indexName(indexName)
                 .buildClient();
+    }
+
+    @Bean
+    public SearchAsyncClient getSearchAsyncClient(){
+        return new SearchClientBuilder()
+                .endpoint("https://"+serviceName+".search.windows.net")
+                .credential(new AzureKeyCredential(adminKey))
+                .indexName(indexName)
+                .buildAsyncClient();
     }
 
     public void configure(){
@@ -77,8 +103,8 @@ public class AzureSearchConfig {
                                     .setFilterable(true).setSearchable(true),
                             new SearchField("content", SearchFieldDataType.STRING)
                                     .setFilterable(true).setSearchable(true),
-                            new SearchField("tags", SearchFieldDataType.STRING)
-                                    .setFilterable(true).setSearchable(true),
+                            new SearchField("tags", SearchFieldDataType.collection(SearchFieldDataType.STRING))
+                                    .setFilterable(true).setSearchable(true).setFacetable(true),
                             new SearchField("fileType", SearchFieldDataType.STRING)
                                     .setFilterable(true).setSearchable(true).setSortable(true).setFacetable(true),
                             new SearchField("description", SearchFieldDataType.STRING)
@@ -92,7 +118,7 @@ public class AzureSearchConfig {
                             new SearchField("metadata_storage_file_extension", SearchFieldDataType.STRING)
                                     .setFilterable(true).setSearchable(true).setSortable(true).setFacetable(true)
                     ).collect(Collectors.toList())
-            ));
+                ).setSuggesters(new SearchSuggester("sg", searchableFieldNames)));
         }
         logger.info("SearchIndex already exists");
         return response.getValue();

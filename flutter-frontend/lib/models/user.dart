@@ -21,12 +21,12 @@ class User {
     return 'User{id: $id, email: $email, username: $username}';
   }
 
-  // @override
-  // bool operator ==(Object other) =>
-  //     identical(this, other) ||
-  //     other is User && runtimeType == other.runtimeType
-  //         && (id == other.id || email == other.email || username == other.username);
-  //
-  // @override
-  // int get hashCode => id.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is User && runtimeType == other.runtimeType
+          && (id == other.id || email == other.email || username == other.username);
+
+  @override
+  int get hashCode => id.hashCode;
 }

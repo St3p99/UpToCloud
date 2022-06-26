@@ -22,6 +22,11 @@ const String REQUEST_LOGOUT =
 
 // - SEARCH CONTROLLER
 const String REQUEST_LOAD_RECENT_FILES = "/api/search/recent";
+const String REQUEST_SEARCH_BY_TAGS = "/api/search/byTags";
+const String REQUEST_SEARCH_ANY_FIELDS_CONTAINS = "/api/search/any-fields-contains";
+const String REQUEST_SEARCH_AUTOCOMPLETE = "/api/search/autocomplete";
+const String REQUEST_SEARCH_TAG_SUGGESTIONS = "/api/search/tag-suggestions";
+const String REQUEST_SEARCH_ANY_FIELDS_CONTAINS_AND_TAGS = "/api/search/any-fields-contains-and-tags";
 const String REQUEST_LOAD_RECENT_FILES_READ_ONLY = "/api/search/recent-read-only";
 const int DEFAULT_PAGE_SIZE = 5;
 

@@ -38,6 +38,8 @@ public class Document {
     @Column(name = "name")
     private String name;
 
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     @JsonIgnore
     @Column(name = "resource_url")
     private String resourceUrl;

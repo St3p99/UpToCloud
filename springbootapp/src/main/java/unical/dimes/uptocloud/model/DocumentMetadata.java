@@ -21,7 +21,6 @@ import java.util.Objects;
 /* lombok auto-generated code */
 @Getter
 @Setter
-@EqualsAndHashCode
 @ToString
 /* lombok auto-generated code */
 @Entity
@@ -36,6 +35,7 @@ public class DocumentMetadata {
     private Long id;
 
     @JsonBackReference
+    @ToString.Exclude
     @OneToOne()
     @JoinColumn(name = "document_id", unique = true, nullable = false)
     public Document document;
@@ -57,7 +57,6 @@ public class DocumentMetadata {
     @Column(name = "file_size")
     private Long fileSize;
 
-    @JsonManagedReference
     @ManyToMany(cascade = { CascadeType.ALL })
     @JoinTable(
             name = "document_metadata_tag",
@@ -66,6 +65,10 @@ public class DocumentMetadata {
             schema = "public"
     )
     private List<Tag> tags;
+
+
+
+
 
     public DocumentMetadata() {}
     public DocumentMetadata(Document d){this.document = d;}

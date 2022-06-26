@@ -22,18 +22,19 @@ class Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (!Responsive.isDesktop(context))
+        if (!Responsive.isDesktop(context)) ...[
           IconButton(
             icon: Icon(Icons.menu),
             onPressed: context.read<MenuController>().controlMenu,
           ),
-        Padding(padding: EdgeInsets.only(left: defaultPadding),),
-        if (!Responsive.isMobile(context))
-          Text(
-            title.capitalize,
-            style: Theme.of(context).textTheme.headline6,
-          ),
-        Padding(padding: EdgeInsets.only(left: defaultPadding),),
+          Padding(padding: EdgeInsets.only(left: defaultPadding),),
+        ],
+        // if (!Responsive.isMobile(context))
+        //   Text(
+        //     title.capitalize,
+        //     style: Theme.of(context).textTheme.headline6,
+        //   ),
+        // Padding(padding: EdgeInsets.only(left: defaultPadding),),
         if(title == 'home') ...[Expanded(child: SearchField())],
         if (!Responsive.isMobile(context))
           Spacer(flex: Responsive.isDesktop(context) ? 2 : 1),

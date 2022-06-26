@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../controllers/menu_controller.dart';
 import '../../../constants.dart';
 import '../../dashboard/home_screen.dart';
+import '../../dashboard/search_screen.dart';
 
 class SideMenu extends StatelessWidget {
 
@@ -33,6 +34,7 @@ class SideMenu extends StatelessWidget {
             title: "Search",
             svgSrc: "assets/icons/Search.svg",
             press: () {
+              Provider.of<MenuController>(context, listen: false).updateWidget(SearchScreen(input: null,));
             },
           ),
           DrawerListTile(

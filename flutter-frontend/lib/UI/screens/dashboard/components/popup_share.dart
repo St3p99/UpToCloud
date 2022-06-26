@@ -35,7 +35,7 @@ class _PopupShareState extends State<PopupShare> {
 
   final TextEditingController _typeAheadController = TextEditingController();
 
-  String get _inputTags => _typeAheadController.text.trim();
+  String get _input => _typeAheadController.text.trim();
 
   late List<User> _selectedUsers = List.empty(growable: true);
 
@@ -141,7 +141,7 @@ class _PopupShareState extends State<PopupShare> {
                             ),
                           ] else
                             SizedBox(),
-                          _tagsFormField(),
+                          _formField(),
                           Padding(
                               padding: EdgeInsets.only(bottom: defaultPadding)),
                           Row(
@@ -196,7 +196,7 @@ class _PopupShareState extends State<PopupShare> {
     );
   }
 
-  _tagsFormField(){
+  _formField(){
     return TypeAheadFormField(
       validator: (value) => _validateEmail(value!),
       textFieldConfiguration: TextFieldConfiguration(
@@ -298,14 +298,14 @@ class _PopupShareState extends State<PopupShare> {
   }
 
   HashSet<User> _getSuggestions(String pattern) {
-    if (_inputTags.isEmpty) return _suggestions;
+    if (_input.isEmpty) return _suggestions;
 
     HashSet<User> _tempList = new HashSet();
     _suggestions.forEach((element) {
       String username = element.username;
       String email = element.email;
-      if (email.toLowerCase().trim().contains(_inputTags.toLowerCase()) ||
-          username.toLowerCase().trim().contains(_inputTags.toLowerCase())) {
+      if (email.toLowerCase().trim().contains(_input.toLowerCase()) ||
+          username.toLowerCase().trim().contains(_input.toLowerCase())) {
         _tempList.add(element);
       }
     });

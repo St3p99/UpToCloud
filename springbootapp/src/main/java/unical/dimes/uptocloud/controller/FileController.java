@@ -1,5 +1,9 @@
 package unical.dimes.uptocloud.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,9 +104,11 @@ public class FileController {
     @PostMapping(value = "/set_metadata/{doc_id}", consumes = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> setMetadata(@AuthenticationPrincipal Jwt principal,
                                          @PathVariable("doc_id") Long docID,
-                                         @RequestBody EditMetadataModel body) {
+                                         @RequestParam("filename") String filename,
+                                         @RequestParam("description") String description,
+                                         @RequestParam("tags") List<String> tags) {
         try {
-            fileService.setMetadata(principal.getSubject(), docID, body.getFilename(), body.getDescription(),body.getTags());
+            fileService.setMetadata(principal.getSubject(), docID, filename, description,tags);
             return ResponseEntity.status(200).build();
         } catch (UnauthorizedUserException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User must be the owner of the specified document");
