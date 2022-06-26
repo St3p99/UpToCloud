@@ -22,7 +22,7 @@ const String REQUEST_LOGOUT =
 
 // - SEARCH CONTROLLER
 const String REQUEST_LOAD_RECENT_FILES = "/api/search/recent";
-const String REQUEST_SEARCH_BY_TAGS = "/api/search/byTags";
+const String REQUEST_SEARCH_BY_TAGS = "/api/search/by-tags";
 const String REQUEST_SEARCH_ANY_FIELDS_CONTAINS = "/api/search/any-fields-contains";
 const String REQUEST_SEARCH_AUTOCOMPLETE = "/api/search/autocomplete";
 const String REQUEST_SEARCH_TAG_SUGGESTIONS = "/api/search/tag-suggestions";
@@ -46,6 +46,7 @@ const String REQUEST_GET_READERS_BY_DOC = "/api/files/readersByDoc";
 const String REQUEST_UPLOAD_FILES = "api/files/upload-multiple";
 const String REQUEST_UPLOAD_FILE = "api/files/upload";
 const String REQUEST_DOWNLOAD_FILE = "api/files/download";
+const String REQUEST_DOWNLOAD_FILE_STREAM = "api/files/download-stream";
 const String REQUEST_DELETE_FILE = "api/files/delete";
 
 

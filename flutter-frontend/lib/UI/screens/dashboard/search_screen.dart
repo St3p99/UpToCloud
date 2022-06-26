@@ -33,6 +33,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   bool _searchInContent = false;
   late FocusNode _focusNode;
+
   String get _input => _textEditingController.text.trim();
 
   List<String> _tags = List.empty();
@@ -65,12 +66,12 @@ class _SearchScreenState extends State<SearchScreen> {
     _textEditingController.dispose();
   }
 
-  _initTagSuggestions() async{
+  _initTagSuggestions() async {
     List<String>? result = await new ApiController().getTagSuggestions();
-    if( result!=null)
-    setState((){
-      _tags = result;
-    });
+    if (result != null)
+      setState(() {
+        _tags = result;
+      });
     _filterTagSuggestions();
   }
 
@@ -79,8 +80,19 @@ class _SearchScreenState extends State<SearchScreen> {
       _searching = true;
     });
 
-    List<Document>? result = await new ApiController()
+    List<Document>? result;
+    if(_input.isEmpty && _tagsSelected.isNotEmpty)
+      result = await new ApiController().searchByTags(_tagsSelected);
+    else if (_input.isNotEmpty)
+      result = await new ApiController()
         .search(_input, _tagsSelected, searchInContent: _searchInContent);
+    else{
+      setState(() {
+        _searching = false;
+      });
+      return;
+    }
+
     if (result != null) {
       result.forEach((file) {
         file.loadIcon();
@@ -134,18 +146,16 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   ]),
                 ] else ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      _tagsWidget(),
-                      _formField(),
-                      _switchSearchInContent(),
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: defaultPadding),
-                      ),
-                      _displayTagSuggestions(),
-                    ],
-                  )
+                  _tagsWidget(),
+                  _formField(),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: defaultPadding),
+                  ),
+                  _switchSearchInContent(),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: defaultPadding),
+                  ),
+                  _displayTagSuggestions()
                 ],
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: defaultPadding),
@@ -160,29 +170,32 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   _switchSearchInContent() {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height * .05,
-      child: Row(
-        children: [
-          Text(
-            "Enable search in content",
-          ),
-          Padding(
-            padding: const EdgeInsets.all(defaultPadding),
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * .02,
-              child: CupertinoSwitch(
-                value: _searchInContent,
-                activeColor: primaryColor,
-                onChanged: (value) {
-                  setState(() {
-                    _searchInContent = value;
-                  });
-                },
+    return Padding(
+      padding: EdgeInsets.all(defaultPadding/2),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * .05,
+        child: Row(
+          children: [
+            Text(
+              "Enable search in content",
+            ),
+            Padding(
+              padding: const EdgeInsets.all(defaultPadding),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * .02,
+                child: CupertinoSwitch(
+                  value: _searchInContent,
+                  activeColor: primaryColor,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchInContent = value;
+                    });
+                  },
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -239,7 +252,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<List<String>> _autocomplete(String text) async {
-    if(text.isEmpty) return List.empty();
+    if (text.isEmpty) return List.empty();
     List<String>? result = await new ApiController().autocomplete(text);
     setState(() {
       if (result != null)
@@ -275,7 +288,7 @@ class _SearchScreenState extends State<SearchScreen> {
     List<Document> owned = List.empty(growable: true);
     List<Document> readable = List.empty(growable: true);
     _searchResult!.forEach((doc) {
-      if(doc.owner == new UserProvider().currentUser!)
+      if (doc.owner == new UserProvider().currentUser!)
         owned.add(doc);
       else
         readable.add(doc);
@@ -299,8 +312,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   SizedBox(height: defaultPadding),
                   FilesList(
                     title: "Find in Files Shared With Me",
-                    datasource:
-                        SharedSearchResultDataTableSource(readable),
+                    datasource: SharedSearchResultDataTableSource(readable),
                     isOwner: false,
                   ),
                 ],
@@ -338,6 +350,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget tagChip({tag, onTap, action}) {
     return InkWell(
         onTap: onTap,
+        hoverColor: Colors.white12,
         child: Stack(
           children: [
             Container(
@@ -351,7 +364,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   vertical: 10.0,
                 ),
                 decoration: BoxDecoration(
-                  color: bgColor,
+                  color: secondaryColor,
                   borderRadius: BorderRadius.circular(100.0),
                 ),
                 child: Text(
@@ -419,7 +432,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildTagsSuggestionWidget() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (_tagsSuggestions.length  - _tagsSelected.length > 0) ...[
+      if (_tagsSuggestions.length - _tagsSelected.length > 0) ...[
         Text(
           'Tag suggestions',
           style: Theme.of(context).textTheme.labelSmall,

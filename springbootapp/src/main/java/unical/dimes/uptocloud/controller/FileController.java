@@ -1,15 +1,11 @@
 package unical.dimes.uptocloud.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.json.JsonParser;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,21 +14,23 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBodyReturnValueHandler;
 import unical.dimes.uptocloud.model.Document;
 import unical.dimes.uptocloud.model.DocumentMetadata;
-import unical.dimes.uptocloud.model.EditMetadataModel;
 import unical.dimes.uptocloud.model.User;
+import unical.dimes.uptocloud.service.DocumentService;
 import unical.dimes.uptocloud.service.FileService;
 import unical.dimes.uptocloud.support.exception.FileSizeExceededException;
 import unical.dimes.uptocloud.support.exception.ResourceNotFoundException;
 import unical.dimes.uptocloud.support.exception.UnauthorizedUserException;
 import unical.dimes.uptocloud.support.exception.UniqueKeyViolationException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("${base-url}/files")
@@ -42,10 +40,12 @@ public class FileController {
 
     @Value("${max-file-size}")
     private long max_file_size;
+    private final DocumentService documentService;
 
     @Autowired
-    public FileController(FileService fileService) {
+    public FileController(FileService fileService, DocumentService documentService) {
         this.fileService = fileService;
+        this.documentService = documentService;
     }
 
     @Operation(method = "uploadFile", summary = "Upload a file as a blob in the user's container")
@@ -162,11 +162,11 @@ public class FileController {
     @GetMapping(value = "/download/{doc_id}", produces = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> downloadFile(@AuthenticationPrincipal Jwt principal, @PathVariable("doc_id") Long docID) {
         try {
-            Document d = fileService.downloadDocument(principal.getSubject(), docID);
-            String tempFilePath = fileService.getFileStorageLocation() + "/" + docID;
-            if (d != null) {
-                // readAllBytes -> LIMIT 2GB
-                final ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(Paths.get(tempFilePath)));
+            final ByteArrayResource resource =
+                new ByteArrayResource(
+                    fileService.downloadDocument(principal.getSubject(), docID).toByteArray()
+                );
+            Document d = documentService.getById(docID);
                 return ResponseEntity
                         .ok()
                         .header(HttpHeaders.CONTENT_TYPE, d.getMetadata().getFileType())
@@ -174,9 +174,6 @@ public class FileController {
                         .header("Content-Disposition", "attachment; filename=" + d.getName())
                         .contentLength(resource.contentLength())
                         .body(resource);
-            } else {
-                return ResponseEntity.ok("Error");
-            }
         } catch (UnauthorizedUserException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User must have read permissions to download the file");
         } catch (ResourceNotFoundException e) {
@@ -185,6 +182,7 @@ public class FileController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
 
     @Operation(method = "addReader", summary = "Add a reader to the specified file")
     @PreAuthorize("hasAuthority('user')")

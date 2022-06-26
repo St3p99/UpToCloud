@@ -133,7 +133,6 @@ public class SearchService {
         for (String s: input.split(" ")) {
             sb.append("/.*").append(s).append(".*/");
         }
-        System.out.println(sb);
         return sb.toString();
     }
 

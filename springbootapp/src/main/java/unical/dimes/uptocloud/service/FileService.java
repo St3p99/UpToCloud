@@ -11,11 +11,12 @@ import jakarta.json.JsonArray;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import unical.dimes.uptocloud.configs.FileStorageProperties;
+
 import unical.dimes.uptocloud.model.*;
 import unical.dimes.uptocloud.repository.DocumentMetadataRepository;
 import unical.dimes.uptocloud.repository.DocumentRepository;
@@ -26,9 +27,7 @@ import unical.dimes.uptocloud.support.exception.UnauthorizedUserException;
 import unical.dimes.uptocloud.support.exception.UniqueKeyViolationException;
 
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,28 +44,20 @@ public class FileService {
     private final DocumentService documentService;
     private final DocumentMetadataService documentMetadataService;
     private final UserService userService;
-    private final Path fileStorageLocation;
     private final DocumentMetadataRepository documentMetadataRepository;
     private final SearchService searchService;
     @Value("${max-file-size}")
     private long max_file_size;
     @Autowired
-    public FileService(BlobServiceClient blobServiceClient, TagRepository tagRepository, FileStorageProperties fileStorageProperties, DocumentRepository documentRepository, DocumentService documentService, DocumentMetadataService documentMetadataService, UserService userService, DocumentMetadataRepository documentMetadataRepository, SearchService searchService) {
+    public FileService(BlobServiceClient blobServiceClient, TagRepository tagRepository, DocumentRepository documentRepository, DocumentService documentService, DocumentMetadataService documentMetadataService, UserService userService, DocumentMetadataRepository documentMetadataRepository, SearchService searchService) {
         this.blobServiceClient = blobServiceClient;
         this.tagRepository = tagRepository;
         this.documentRepository = documentRepository;
         this.documentService = documentService;
         this.documentMetadataService = documentMetadataService;
         this.userService = userService;
-        fileStorageLocation = Path.of(fileStorageProperties.getUploadDir());
         this.documentMetadataRepository = documentMetadataRepository;
         this.searchService = searchService;
-        try {
-            // creates directory/directories, if directory already exists, it will not throw exception
-            Files.createDirectories(fileStorageLocation);
-        } catch (IOException e) {
-            logger.severe("Could not create the directory where the uploaded files will be stored.");
-        }
 
     }
 
@@ -282,7 +273,7 @@ public class FileService {
                 .getMetadata();
     }
 
-    public Document downloadDocument(String userID, Long docID)
+    public ByteArrayOutputStream downloadDocument(String userID, Long docID)
             throws ResourceNotFoundException,IOException, UnauthorizedUserException {
         User u;
         Document d;
@@ -304,18 +295,12 @@ public class FileService {
         // Get a reference to a blob
         BlobClient blobClient = blobContainerClient.getBlobClient(d.getId().toString());
         logger.info("blobClient OK");
-        try {
-            String tempFilePath = getFileStorageLocation() + "/" + docID;
-            Files.deleteIfExists(Paths.get(tempFilePath));
-            // download file from azure blob storage to a file
-            logger.info("Trying to download file from blob");
-            blobClient.downloadToFile(new File(tempFilePath).getPath());
-            logger.info("File downloaded");
-        } catch (IOException e) {
-            logger.severe(()->String.format("Error while processing file\nException: %s", e));
-            throw e;
-        }
-        return d;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        // download file from azure blob storage with stream
+        logger.info("Trying to download file from blob");
+        blobClient.downloadStream(baos);
+        logger.info("File downloaded");
+        return baos;
     }
 
     private boolean canRead(User u, Document d) {
@@ -341,15 +326,6 @@ public class FileService {
         searchService.getOrCreateAndGetDataSourceConnection(containerName);
         searchService.getOrCreateAndGetSearchIndexer(containerName);
         return blobContainerClient;
-    }
-
-    public Path getFileStorageLocation() {
-        try {
-            Files.createDirectories(this.fileStorageLocation);
-        } catch (IOException e) {
-            logger.severe("Could not create the directory where the uploaded file will be stored.");
-        }
-        return fileStorageLocation;
     }
 
     @Transactional(propagation = Propagation.REQUIRED)

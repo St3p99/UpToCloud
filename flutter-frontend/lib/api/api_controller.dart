@@ -345,6 +345,25 @@ Future<User?> searchUserByEmail(String email) async {
       return null;
     }
   }
+  Future<List<Document>?> searchByTags(List<String> tags) async{
+    try {
+      Map<String, dynamic> params = Map();
+      params["tags"] = tags;
+      Response response = await _restManager.makeGetRequest(
+          ADDRESS_STORE_SERVER,
+          REQUEST_SEARCH_BY_TAGS, params);
+      if (response.statusCode == HttpStatus.notFound) return null;
+      if (response.statusCode == HttpStatus.noContent) return List.empty(growable: true);
+      return List<Document>.from(json
+          .decode(response.body)
+          .map((i) => Document.fromJson(i))
+          .toList());
+    } catch (e) {
+      print("search exception: " + e.toString());
+      return null;
+    }
+  }
+
 
     Future<List<String>?> autocomplete(String text) async{
       try {

@@ -147,6 +147,26 @@ class RestManager {
     return res;
   }
 
+  Future<Response> makeGetRequestStream(
+      String serverAddress, String servicePath,
+      {bool httpsEnabled = false}) async {
+    Uri uri;
+    if (httpsEnabled)
+      uri = Uri.https(serverAddress, servicePath);
+    else
+      uri = Uri.http(serverAddress, servicePath);
+
+    Map<String, String> headers = new Map();
+    headers[HttpHeaders.contentTypeHeader] = "application/octet-stream";
+    headers[HttpHeaders.authorizationHeader] = 'bearer $token';
+
+
+    print(uri.toString());
+    Response res = await get(uri, headers: headers);
+    return res;
+  }
+
+
   Future<Response> makePostRequest(
       String serverAddress, String servicePath, dynamic body,
       {Map<String, dynamic>? value,
@@ -173,4 +193,6 @@ class RestManager {
     return _makeRequest(serverAddress, servicePath, "delete",
         type: type, value: value);
   }
+
+
 }
