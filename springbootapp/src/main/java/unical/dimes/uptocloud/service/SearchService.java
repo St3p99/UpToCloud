@@ -289,7 +289,9 @@ public class SearchService {
                 .setFilter(String.format("search.in(id, %s)", ids))
                 .setSearchFields(getSearchField(false).toArray(new String[0]));
 
-         AutocompletePagedIterable autocompletePagedIterable = searchClient.autocomplete(text, "sg", options, Context.NONE);
+         AutocompletePagedIterable autocompletePagedIterable = searchClient.autocomplete(
+                 inputFuzzy(text,1)+inputRegexContains(text),
+                 "sg", options, Context.NONE);
 
         List<String> ret = new LinkedList<>();
         autocompletePagedIterable.forEach((result) -> ret.add(result.getText()));

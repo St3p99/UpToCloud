@@ -21,6 +21,7 @@ import unical.dimes.uptocloud.model.*;
 import unical.dimes.uptocloud.repository.DocumentMetadataRepository;
 import unical.dimes.uptocloud.repository.DocumentRepository;
 import unical.dimes.uptocloud.repository.TagRepository;
+import unical.dimes.uptocloud.support.Utils;
 import unical.dimes.uptocloud.support.exception.FileSizeExceededException;
 import unical.dimes.uptocloud.support.exception.ResourceNotFoundException;
 import unical.dimes.uptocloud.support.exception.UnauthorizedUserException;
@@ -191,8 +192,8 @@ public class FileService {
         }
 
         if(description!=null && !description.isEmpty()){
-            dm.setDescription(description);
-            blobMetadata.put(MetadataCategory.DESCRIPTION.toString(), description);
+            dm.setDescription(description.trim());
+            blobMetadata.put(MetadataCategory.DESCRIPTION.toString(), Utils.unaccent(description));
         }else{
             dm.setDescription("");
             blobMetadata.remove(MetadataCategory.DESCRIPTION.toString());
