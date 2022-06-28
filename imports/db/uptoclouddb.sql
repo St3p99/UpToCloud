@@ -5,7 +5,7 @@
 -- Dumped from database version 14.3 (Debian 14.3-1.pgdg110+1)
 -- Dumped by pg_dump version 14.1
 
--- Started on 2022-06-16 16:45:32
+-- Started on 2022-06-27 18:13:30
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -53,7 +53,7 @@ CREATE SEQUENCE public.document_id_seq
 ALTER TABLE public.document_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3371 (class 0 OID 0)
+-- TOC entry 3375 (class 0 OID 0)
 -- Dependencies: 210
 -- Name: document_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -94,7 +94,7 @@ CREATE SEQUENCE public.document_metadata_id_seq
 ALTER TABLE public.document_metadata_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3372 (class 0 OID 0)
+-- TOC entry 3376 (class 0 OID 0)
 -- Dependencies: 212
 -- Name: document_metadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -157,7 +157,7 @@ CREATE SEQUENCE public.tag_id_seq
 ALTER TABLE public.tag_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3373 (class 0 OID 0)
+-- TOC entry 3377 (class 0 OID 0)
 -- Dependencies: 216
 -- Name: tag_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -205,7 +205,7 @@ ALTER TABLE ONLY public.tag ALTER COLUMN id SET DEFAULT nextval('public.tag_id_s
 
 
 --
--- TOC entry 3357 (class 0 OID 16385)
+-- TOC entry 3361 (class 0 OID 16385)
 -- Dependencies: 209
 -- Data for Name: document; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -215,7 +215,7 @@ COPY public.document (id, name, resource_url, owner_id) FROM stdin;
 
 
 --
--- TOC entry 3359 (class 0 OID 16391)
+-- TOC entry 3363 (class 0 OID 16391)
 -- Dependencies: 211
 -- Data for Name: document_metadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -225,7 +225,7 @@ COPY public.document_metadata (id, description, document_id, file_size, file_typ
 
 
 --
--- TOC entry 3361 (class 0 OID 16397)
+-- TOC entry 3365 (class 0 OID 16397)
 -- Dependencies: 213
 -- Data for Name: document_metadata_tag; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -235,7 +235,7 @@ COPY public.document_metadata_tag (document_metadata_id, tag_id) FROM stdin;
 
 
 --
--- TOC entry 3362 (class 0 OID 16400)
+-- TOC entry 3366 (class 0 OID 16400)
 -- Dependencies: 214
 -- Data for Name: reading_permissions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -245,7 +245,7 @@ COPY public.reading_permissions (document_id, reader_id) FROM stdin;
 
 
 --
--- TOC entry 3363 (class 0 OID 16403)
+-- TOC entry 3367 (class 0 OID 16403)
 -- Dependencies: 215
 -- Data for Name: tag; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -255,7 +255,7 @@ COPY public.tag (id, name) FROM stdin;
 
 
 --
--- TOC entry 3365 (class 0 OID 16407)
+-- TOC entry 3369 (class 0 OID 16407)
 -- Dependencies: 217
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -265,30 +265,30 @@ COPY public.users (id, container_name, email, username) FROM stdin;
 
 
 --
--- TOC entry 3374 (class 0 OID 0)
+-- TOC entry 3378 (class 0 OID 0)
 -- Dependencies: 210
 -- Name: document_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.document_id_seq', 16, true);
+SELECT pg_catalog.setval('public.document_id_seq', 50, true);
 
 
 --
--- TOC entry 3375 (class 0 OID 0)
+-- TOC entry 3379 (class 0 OID 0)
 -- Dependencies: 212
 -- Name: document_metadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.document_metadata_id_seq', 10, true);
+SELECT pg_catalog.setval('public.document_metadata_id_seq', 37, true);
 
 
 --
--- TOC entry 3376 (class 0 OID 0)
+-- TOC entry 3380 (class 0 OID 0)
 -- Dependencies: 216
 -- Name: tag_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tag_id_seq', 10, true);
+SELECT pg_catalog.setval('public.tag_id_seq', 42, true);
 
 
 --
@@ -337,7 +337,25 @@ ALTER TABLE ONLY public.reading_permissions
 
 
 --
--- TOC entry 3205 (class 2606 OID 16424)
+-- TOC entry 3205 (class 2606 OID 24658)
+-- Name: tag tag_name_id_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.tag
+    ADD CONSTRAINT tag_name_id_unique UNIQUE (name);
+
+
+--
+-- TOC entry 3207 (class 2606 OID 24656)
+-- Name: tag tag_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.tag
+    ADD CONSTRAINT tag_pk UNIQUE (name);
+
+
+--
+-- TOC entry 3209 (class 2606 OID 16424)
 -- Name: tag tag_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -346,7 +364,7 @@ ALTER TABLE ONLY public.tag
 
 
 --
--- TOC entry 3207 (class 2606 OID 16426)
+-- TOC entry 3211 (class 2606 OID 16426)
 -- Name: users uk_6dotkott2kjsp8vw4d0m25fb7; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -364,7 +382,7 @@ ALTER TABLE ONLY public.document_metadata
 
 
 --
--- TOC entry 3209 (class 2606 OID 16430)
+-- TOC entry 3213 (class 2606 OID 16430)
 -- Name: users uk_r43af9ap4edm43mmtq01oddj6; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -373,7 +391,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 3211 (class 2606 OID 16432)
+-- TOC entry 3215 (class 2606 OID 16432)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -382,7 +400,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 3216 (class 2606 OID 16433)
+-- TOC entry 3220 (class 2606 OID 16433)
 -- Name: reading_permissions FK4q5rqlgho8vfiafrwwktryyxm; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -391,7 +409,7 @@ ALTER TABLE ONLY public.reading_permissions
 
 
 --
--- TOC entry 3214 (class 2606 OID 16438)
+-- TOC entry 3218 (class 2606 OID 16438)
 -- Name: document_metadata_tag FKdm54pr38k1d8svljr77vxav4q; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -400,7 +418,7 @@ ALTER TABLE ONLY public.document_metadata_tag
 
 
 --
--- TOC entry 3212 (class 2606 OID 16443)
+-- TOC entry 3216 (class 2606 OID 16443)
 -- Name: document FKhe3736ydj9odajha3sspor43p; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -409,7 +427,7 @@ ALTER TABLE ONLY public.document
 
 
 --
--- TOC entry 3217 (class 2606 OID 16448)
+-- TOC entry 3221 (class 2606 OID 16448)
 -- Name: reading_permissions FKj58vr8ve7flxrakjpn030ieqw; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -418,7 +436,7 @@ ALTER TABLE ONLY public.reading_permissions
 
 
 --
--- TOC entry 3215 (class 2606 OID 16453)
+-- TOC entry 3219 (class 2606 OID 16453)
 -- Name: document_metadata_tag FKm4p2mgtfk6upm34nh790bfjl9; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -427,7 +445,7 @@ ALTER TABLE ONLY public.document_metadata_tag
 
 
 --
--- TOC entry 3213 (class 2606 OID 16458)
+-- TOC entry 3217 (class 2606 OID 16458)
 -- Name: document_metadata FKu69emeb62buepn3uxneike4h; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -435,7 +453,7 @@ ALTER TABLE ONLY public.document_metadata
     ADD CONSTRAINT "FKu69emeb62buepn3uxneike4h" FOREIGN KEY (document_id) REFERENCES public.document(id);
 
 
--- Completed on 2022-06-16 16:45:32
+-- Completed on 2022-06-27 18:13:30
 
 --
 -- PostgreSQL database dump complete

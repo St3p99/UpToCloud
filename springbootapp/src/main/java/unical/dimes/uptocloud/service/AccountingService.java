@@ -81,8 +81,9 @@ public class AccountingService {
         UsersResource usersResource = null;
         String userId = null;
         Response response = null;
+        Keycloak keycloak = null;
         try{
-            Keycloak keycloak = getKeycloakObj();
+            keycloak = getKeycloakObj();
             UserRepresentation userRepresentation = new UserRepresentation();
 
             userRepresentation.setEnabled(true);
@@ -118,7 +119,9 @@ public class AccountingService {
             // Assign client level role to user
             userResource.roles().clientLevel(app1Client.getId()).add(Arrays.asList(userClientRole));
         }catch (Exception e){
-            if(response.getStatus() == HttpStatus.CREATED.value()){
+            logger.severe(e.toString());
+            if(response != null) logger.warning(response.getStatus()+"");
+            if(response != null && response.getStatus() == HttpStatus.CREATED.value()){
                 usersResource.delete(userId);
             }
             return null;

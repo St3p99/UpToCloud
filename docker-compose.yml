@@ -1,17 +1,5 @@
 version: "3.8"
 services:
-  # azurite:
-  #   container_name: azurite
-  #   image: mcr.microsoft.com/azure-storage/azurite
-  #   hostname: azurite
-  #   restart: on-failure
-  #   command: "azurite --blobHost 0.0.0.0 --blobPort 10000 --queueHost 0.0.0.0 --queuePort 10001"
-  #   ports:
-  #     - "10000:10000"
-  #     - "10001:10001"
-  #   networks:
-  #   - uptocloudnw
-
   keycloak:
     container_name: keycloak
     hostname: keycloak
@@ -19,10 +7,13 @@ services:
       - " -b 0.0.0.0"
     image: jboss/keycloak:${KEYCLOAK_VERSION}
     restart: on-failure
-    # command: "docker run -e KEYCLOAK_USER=$KEYCLOAK_USER -e KEYCLOAK_PASSWORD=$KEYCLOAK_USER -e KEYCLOAK_IMPORT=./imports/keycloak/uptocloud-realm.json"
     env_file: ./.env
     volumes: 
       - ./imports/keycloak/realm-export.json:/keycloak/realm-export.json
+      - ./imports/certs/tls.crt:/etc/x509/https/tls.crt   # map certificates to container
+      - ./imports/certs/tls.key:/etc/x509/https/tls.key   # map certificates to container
+    #   - ./imports/keycloak/init.sh:/init.sh
+    # entrypoint: sh -c "/init.sh"
     environment:
       KEYCLOAK_USER: $KEYCLOAK_USER
       KEYCLOAK_PASSWORD: $KEYCLOAK_PASSWORD
@@ -32,6 +23,7 @@ services:
       KEYCLOAK_IMPORT: /keycloak/realm-export.json
     ports:
       - $KEYCLOAK_LOCAL_PORT:$KEYCLOAK_DOCKER_PORT
+      - $KEYCLOAK_LOCAL_PORT_HTTPS:$KEYCLOAK_DOCKER_PORT_HTTPS
     depends_on:
       - postgresdb
     networks:
@@ -60,12 +52,15 @@ services:
     depends_on:
       - postgresdb
       - keycloak
-      # - azurite
     build: ./springbootapp
     restart: on-failure
     env_file: ./.env
     ports:
       - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
+    volumes:
+      - ./imports/certs/uptocloud.p12:/uptocloud.p12
+    #   - ./imports/init.sh:/init.sh
+    # entrypoint: sh -c "/init.sh"
     stdin_open: true
     tty: true
     networks:
