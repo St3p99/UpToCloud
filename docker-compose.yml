@@ -46,25 +46,25 @@ services:
     networks:
     - uptocloudnw
   
-  backend:
-    container_name: springbootapp
-    hostname: springbootapp
-    depends_on:
-      - postgresdb
-      - keycloak
-    build: ./springbootapp
-    restart: on-failure
-    env_file: ./.env
-    ports:
-      - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
-    volumes:
-      - ./imports/certs/uptocloud.p12:/uptocloud.p12
+  # backend:
+  #   container_name: springbootapp
+  #   hostname: springbootapp
+  #   depends_on:
+  #     - postgresdb
+  #     - keycloak
+  #   build: ./springbootapp
+  #   restart: on-failure
+  #   env_file: ./.env
+  #   ports:
+  #     - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
+    # volumes:
+      # - ./imports/certs/uptocloud.p12:/uptocloud.p12
     #   - ./imports/init.sh:/init.sh
     # entrypoint: sh -c "/init.sh"
-    stdin_open: true
-    tty: true
-    networks:
-    - uptocloudnw
+    # stdin_open: true
+    # tty: true
+    # networks:
+    # - uptocloudnw
   
 networks:
   uptocloudnw: 

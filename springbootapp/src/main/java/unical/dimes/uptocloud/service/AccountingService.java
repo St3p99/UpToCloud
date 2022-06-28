@@ -1,6 +1,7 @@
 package unical.dimes.uptocloud.service;
 
-import org.springframework.core.io.ByteArrayResource;
+import org.keycloak.adapters.springsecurity.client.KeycloakClientRequestFactory;
+import org.keycloak.adapters.springsecurity.client.KeycloakRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import unical.dimes.uptocloud.model.User;
 import unical.dimes.uptocloud.repository.UserRepository;
 import unical.dimes.uptocloud.support.exception.UniqueKeyViolationException;
@@ -54,6 +56,7 @@ public class AccountingService {
     private String clientSecret;
     @Value("${role-user}")
     private String USER_ROLE;
+
 
 
     @Autowired
