@@ -19,7 +19,7 @@
   "actionTokenGeneratedByAdminLifespan": 43200,
   "actionTokenGeneratedByUserLifespan": 300,
   "enabled": true,
-  "sslRequired": "none",
+  "sslRequired": "external",
   "registrationAllowed": false,
   "registrationEmailAsUsername": false,
   "rememberMe": false,
@@ -713,8 +713,8 @@
     {
       "id": "28064a6e-5047-466e-8288-8e76e3ce4c87",
       "clientId": "uptocloud-microservice",
-      "rootUrl": "https://uptocloud.netlify.app",
-      "adminUrl": "http://springbootapp/8180/api",
+      "rootUrl": "",
+      "adminUrl": "",
       "baseUrl": "",
       "surrogateAuthRequired": false,
       "enabled": true,
@@ -722,7 +722,7 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "558235ab-035a-4886-b3fa-70156f637a6c",
       "redirectUris": [
-        "https://uptocloud.netlify.app/*"
+        "*"
       ],
       "webOrigins": [
         "*"

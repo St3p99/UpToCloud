@@ -12,8 +12,6 @@ services:
       - ./imports/keycloak/realm-export.json:/keycloak/realm-export.json
       - ./imports/certs/tls.crt:/etc/x509/https/tls.crt   # map certificates to container
       - ./imports/certs/tls.key:/etc/x509/https/tls.key   # map certificates to container
-    #   - ./imports/keycloak/init.sh:/init.sh
-    # entrypoint: sh -c "/init.sh"
     environment:
       KEYCLOAK_USER: $KEYCLOAK_USER
       KEYCLOAK_PASSWORD: $KEYCLOAK_PASSWORD
@@ -46,25 +44,21 @@ services:
     networks:
     - uptocloudnw
   
-  # backend:
-  #   container_name: springbootapp
-  #   hostname: springbootapp
-  #   depends_on:
-  #     - postgresdb
-  #     - keycloak
-  #   build: ./springbootapp
-  #   restart: on-failure
-  #   env_file: ./.env
-  #   ports:
-  #     - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
-    # volumes:
-      # - ./imports/certs/uptocloud.p12:/uptocloud.p12
-    #   - ./imports/init.sh:/init.sh
-    # entrypoint: sh -c "/init.sh"
-    # stdin_open: true
-    # tty: true
-    # networks:
-    # - uptocloudnw
+  backend:
+    container_name: springbootapp
+    hostname: springbootapp
+    depends_on:
+      - postgresdb
+      - keycloak
+    build: ./springbootapp
+    restart: on-failure
+    env_file: ./.env
+    ports:
+      - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
+    stdin_open: true
+    tty: true
+    networks:
+    - uptocloudnw
   
 networks:
   uptocloudnw: 
