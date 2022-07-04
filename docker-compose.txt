@@ -8,9 +8,7 @@ services:
     image: uptocloudregister.azurecr.io/keycloak
     restart: always
     volumes: 
-      - ${WEBAPP_STORAGE_HOME}/imports/keycloak/realm-export.json:/keycloak/realm-export.json
-      - ${WEBAPP_STORAGE_HOME}/imports/certs/tls.crt:/etc/x509/https/tls.crt
-      - ${WEBAPP_STORAGE_HOME}/imports/certs/tls.key:/etc/x509/https/tls.key
+      - ./imports/keycloak/realm-export.json:/keycloak/realm-export.json
     environment:
       KEYCLOAK_USER: postgres
       KEYCLOAK_PASSWORD: adminuptocloud
@@ -19,6 +17,8 @@ services:
       KEYCLOAK_DATABASE_PASSWORD: uptoclouddb
       KEYCLOAK_DATABASE_NAME: keycloakdb
       DB_VENDOR: h2
+    ports:
+      - "8081:8081"
   db:
     container_name: db
     image: uptocloudregister.azurecr.io/postgres
@@ -28,15 +28,19 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: uptoclouddb
     volumes:
-      - ${WEBAPP_STORAGE_HOME}/imports/db/uptoclouddb.sql:/docker-entrypoint-initdb.d/uptoclouddb.sql  
+      - ./imports/db/uptoclouddb.sql:/docker-entrypoint-initdb.d/uptoclouddb.sql  
+    ports:
+      - "5432:5432"
   
   springbootapp:
     depends_on:
       - db
       - keycloak
     container_name: springbootapp
-    image: uptocloudregister.azurecr.io/springbootapp
+    image: 9cae1b2d1db9
     restart: always
+    ports:
+      - "8180:8180"
 
   frontend:
     depends_on:
@@ -44,7 +48,14 @@ services:
       - keycloak
       - springbootapp
     container_name: frontend
-    image: uptocloudregister.azurecr.io/frontend
+    image: 9f1d38dc6274
     restart: always
     ports:
-      - 80:80
+      - "5000:5000"
+  
+  nginx:
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./imports/nginx/default.conf:/etc/nginx/conf.d/default.conf
