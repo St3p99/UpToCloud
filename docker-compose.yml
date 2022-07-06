@@ -1,11 +1,10 @@
 version: "3.8"
 services:
   keycloak:
-    container_name: keycloak
+    image: jboss/keycloak:9.0.2
     command:
       - " -b 0.0.0.0"
       - " -Djboss.socket.binding.port-offset=1"
-    image: uptocloudregister.azurecr.io/keycloak
     restart: always
     volumes: 
       - ./imports/keycloak/realm-export.json:/keycloak/realm-export.json
@@ -19,9 +18,9 @@ services:
       DB_VENDOR: h2
     ports:
       - "8081:8081"
+  
   db:
-    container_name: db
-    image: uptocloudregister.azurecr.io/postgres
+    image: postgres
     restart: always
     environment:
       POSTGRES_DB: uptoclouddb
@@ -33,33 +32,31 @@ services:
       - "5432:5432"
   
   springbootapp:
+    image: springboot
     depends_on:
       - db
       - keycloak
-    container_name: springbootapp
-    image: 887cd3c33550
     restart: always
     ports:
       - "8180:8180"
 
   frontend:
+    image: frontend
     depends_on:
       - db
       - keycloak
       - springbootapp
-    container_name: frontend
-    image: f293d9fb07ba
     restart: always
     ports:
       - "5000:5000"
   
-  nginx:
-    image: uptocloudregister.azurecr.io/nginx
+  proxy:
+    image: nginx
     restart: always
     ports:
       - "80:80"
-      - "443:443"
+      # - "443:443"
     volumes:
       - ./imports/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./imports/certs/tls.crt:/etc/nginx/certs/tls.crt
-      - ./imports/certs/tls.key:/etc/nginx/certs/tls.key
+      # - ./imports/certs/tls.crt:/etc/nginx/certs/tls.crt
+      # - ./imports/certs/tls.key:/etc/nginx/certs/tls.key

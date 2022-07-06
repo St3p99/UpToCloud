@@ -8,9 +8,10 @@ import java.text.Normalizer;
 @UtilityClass
 public class Utils {
 
-    public static String unaccent(String src) {
+    public static String removeSpecialChar(String src) {
         return Normalizer
                 .normalize(src, Normalizer.Form.NFD)
-                .replaceAll("[^\\p{ASCII}]", "").trim();
+                .replaceAll("[^\\p{ASCII}]", "")
+                .replaceAll("[^a-zA-Z0-9]", " ").trim();
     }
 }

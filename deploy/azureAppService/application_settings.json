@@ -1,0 +1,47 @@
+[
+  {
+    "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+    "value": "K9fPdQIaZ4uCLRBrrU9w8KG=Knm0LHY6",
+    "slotSetting": false
+  },
+  {
+    "name": "DOCKER_REGISTRY_SERVER_URL",
+    "value": "https://uptocloudregister.azurecr.io",
+    "slotSetting": false
+  },
+  {
+    "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+    "value": "uptocloudregister",
+    "slotSetting": false
+  },
+  {
+    "name": "PORT",
+    "value": "80",
+    "slotSetting": false
+  },
+  {
+    "name": "WEBSITE_HEALTHCHECK_MAXPINGFAILURES",
+    "value": "10",
+    "slotSetting": false
+  },
+  {
+    "name": "WEBSITE_HTTPLOGGING_RETENTION_DAYS",
+    "value": "7",
+    "slotSetting": false
+  },
+  {
+    "name": "WEBSITES_CONTAINER_START_TIME_LIMIT",
+    "value": "1800",
+    "slotSetting": false
+  },
+  {
+    "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+    "value": "true",
+    "slotSetting": false
+  },
+  {
+    "name": "WEBSITES_PORT",
+    "value": "80",
+    "slotSetting": false
+  }
+]

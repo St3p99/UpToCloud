@@ -1,0 +1,66 @@
+version: "3.8"
+services:
+  keycloak:
+    image: jboss/keycloak:9.0.2
+    container_name: keycloak
+    command:
+      - " -b 0.0.0.0"
+      - " -Djboss.socket.binding.port-offset=1"
+    restart: always
+    volumes: 
+      - ${WEBAPP_STORAGE_HOME}/imports/keycloak/realm-export.json:/keycloak/realm-export.json
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: adminuptocloud
+      KEYCLOAK_IMPORT: /keycloak/realm-export.json
+      KEYCLOAK_DATABASE_USER: postgres
+      KEYCLOAK_DATABASE_PASSWORD: uptoclouddb
+      KEYCLOAK_DATABASE_NAME: keycloakdb
+      DB_VENDOR: h2
+    ports:
+      - "8081:8081"
+  
+  db:
+    image: postgres
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_DB: uptoclouddb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: uptoclouddb
+    volumes:
+      - ${WEBAPP_STORAGE_HOME}/imports/db/uptoclouddb.sql:/docker-entrypoint-initdb.d/uptoclouddb.sql  
+    ports:
+      - "5432:5432"
+  
+  springbootapp:
+    image: st3p99/springboot
+    container_name: springbootapp
+    depends_on:
+      - db
+      - keycloak
+    restart: always
+    ports:
+      - "8180:8180"
+
+  frontend:
+    depends_on:
+      - db
+      - keycloak
+      - springbootapp
+    container_name: frontend
+    image: st3p99/frontend
+    restart: always
+    ports:
+      - "5000:5000"
+  
+  proxy:
+    image: nginx
+    restart: always
+    ports:
+      - "80:80"
+      # - "443:443"
+    volumes:
+      - ${WEBAPP_STORAGE_HOME}/imports/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      # - ${WEBAPP_STORAGE_HOME}/imports/certs/tls.crt:/etc/nginx/certs/tls.crt
+      # - ${WEBAPP_STORAGE_HOME}/imports/certs/tls.key:/etc/nginx/certs/tls.key

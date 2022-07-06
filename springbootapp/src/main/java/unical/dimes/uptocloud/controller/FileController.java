@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import java.util.List;
 
 @RestController
@@ -105,8 +106,8 @@ public class FileController {
     public ResponseEntity<?> setMetadata(@AuthenticationPrincipal Jwt principal,
                                          @PathVariable("doc_id") Long docID,
                                          @RequestParam("filename") String filename,
-                                         @RequestParam("description") String description,
-                                         @RequestParam("tags") List<String> tags) {
+                                         @RequestParam(name="description", required = false, defaultValue = "") String description,
+                                         @RequestParam(name = "tags", required = false, defaultValue = "") List<String> tags) {
         try {
             fileService.setMetadata(principal.getSubject(), docID, filename, description,tags);
             return ResponseEntity.status(200).build();

@@ -73,7 +73,6 @@ public class FileService {
         DocumentMetadata dm;
         String resourceUrl = null;
         boolean success = false;
-        boolean uploaded = false;
         try {
             u = userService.getById(userID);
             if(documentRepository.existsByNameAndOwner(file.getOriginalFilename(), u))
@@ -88,7 +87,7 @@ public class FileService {
             dm.setFileType(mimeType);
             dm.setFileSize(file.getSize());
             Map<String, String> blobMetadata = new HashMap<>();
-            blobMetadata.put(MetadataCategory.FILE_NAME.toString(),  file.getOriginalFilename());
+            blobMetadata.put(MetadataCategory.FILE_NAME.toString(), Utils.removeSpecialChar(file.getOriginalFilename()));
             blobMetadata.put(MetadataCategory.FILE_TYPE.toString(), mimeType);
             blobMetadata.put(MetadataCategory.ID.toString(), d.getId().toString());
 
@@ -162,6 +161,7 @@ public class FileService {
         BlockBlobClient blockBlobClient = getOrCreateAndGetContainerByOwner(u).getBlobClient(d.getId().toString()).getBlockBlobClient();
         blockBlobClient.delete();
     }
+
     public void setMetadata(String userID, Long docID, String filename,
                             String description, List<String> tagsName)
             throws IllegalArgumentException, ResourceNotFoundException, UnauthorizedUserException {
@@ -188,19 +188,18 @@ public class FileService {
 
         if(filename!=null && !filename.isEmpty()){
             d.setName(filename);
-            blobMetadata.put(MetadataCategory.FILE_NAME.toString(), filename);
+            blobMetadata.put(MetadataCategory.FILE_NAME.toString(),  Utils.removeSpecialChar(filename));
         }
 
         if(description!=null && !description.isEmpty()){
             dm.setDescription(description.trim());
-            blobMetadata.put(MetadataCategory.DESCRIPTION.toString(), Utils.unaccent(description));
+            blobMetadata.put(MetadataCategory.DESCRIPTION.toString(), Utils.removeSpecialChar(description));
         }else{
             dm.setDescription("");
             blobMetadata.remove(MetadataCategory.DESCRIPTION.toString());
         }
 
         if(tagsName!=null && !tagsName.isEmpty()){
-//            StringBuilder sb = new StringBuilder();
             Tag t;
             for (String tagName: tagsName) {
                 Optional<Tag> ot = tagRepository.findByName(tagName);
@@ -211,13 +210,11 @@ public class FileService {
                 }
                 if(!tags.contains(t)){
                     tags.add(t);
-//                    sb.append(tagName).append(":");
                 }
             }
             dm.setTags(new LinkedList<>(tags));
             JsonArray jsonArray = Json.createArrayBuilder(tagsName).build();
-//            blobMetadata.put(MetadataCategory.TAGS.toString(), sb.toString());
-            blobMetadata.put(MetadataCategory.TAGS.toString(), jsonArray.toString());
+            blobMetadata.put(MetadataCategory.TAGS.toString(),  Utils.removeSpecialChar(jsonArray.toString()));
         }else{
             dm.setTags(new LinkedList<>());
             blobMetadata.remove(MetadataCategory.TAGS.toString());
@@ -317,7 +314,7 @@ public class FileService {
 
     private BlobContainerClient createContainer(User u){
         //Create a unique name for the container
-        String containerName = u.getUsername() + java.util.UUID.randomUUID();
+        String containerName = u.getId();
         u.setContainerName(containerName);
 
         // Create the container and return a container client object
